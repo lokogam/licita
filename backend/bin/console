@@ -1,0 +1,87 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Command line tasks.
+ *
+ *   php bin/console migrate             Run pending migrations
+ *   php bin/console migrate:status      List migrations and whether they ran
+ *   php bin/console migrate:rollback    Revert the last batch
+ *   php bin/console migrate:fresh       Drop all tables and migrate again (development only)
+ *   php bin/console schema:dump         Regenerate bd/01_schema.sql from the migrations
+ *   php bin/console openapi:build       Pre-generate the OpenAPI document cache
+ */
+
+declare(strict_types=1);
+
+use App\Database\Migrator;
+use App\Database\SchemaDumper;
+use App\Services\OpenApiSpec;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Connection;
+
+$basePath = dirname(__DIR__);
+require $basePath . '/bootstrap/app.php';
+
+/** @var Connection $db */
+$db = Capsule::connection();
+$migrationsPath = $basePath . '/database/migrations';
+$command = $argv[1] ?? 'help';
+
+$print = static function (string $line): void {
+    fwrite(STDOUT, $line . PHP_EOL);
+};
+
+switch ($command) {
+    case 'migrate':
+        $ran = (new Migrator($db, $migrationsPath))->migrate();
+        $print($ran === [] ? 'Nothing to migrate.' : 'Migrated: ' . implode(', ', $ran));
+        break;
+
+    case 'migrate:status':
+        foreach ((new Migrator($db, $migrationsPath))->status() as $name => $ran) {
+            $print(($ran ? '[x] ' : '[ ] ') . $name);
+        }
+        break;
+
+    case 'migrate:rollback':
+        $reverted = (new Migrator($db, $migrationsPath))->rollback();
+        $print($reverted === [] ? 'Nothing to roll back.' : 'Rolled back: ' . implode(', ', $reverted));
+        break;
+
+    case 'migrate:fresh':
+        if (($config['env'] ?? 'production') === 'production') {
+            fwrite(STDERR, "migrate:fresh is disabled in production.\n");
+            exit(1);
+        }
+        (new Migrator($db, $migrationsPath))->fresh();
+        $print('Database rebuilt from migrations.');
+        break;
+
+    case 'schema:dump':
+        // Migrate a throwaway database so the real one is never touched.
+        $scratch = $db->getDatabaseName() . '_schema_dump';
+        $db->statement("DROP DATABASE IF EXISTS `{$scratch}`");
+        $db->statement("CREATE DATABASE `{$scratch}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+        $capsule = new Capsule();
+        $capsule->addConnection(array_merge(require $basePath . '/config/database.php', ['database' => $scratch]), 'dump');
+        $dumpDb = $capsule->getConnection('dump');
+
+        (new Migrator($dumpDb, $migrationsPath))->migrate();
+        $sql = (new SchemaDumper($dumpDb, ['activities', 'tenders', 'tender_documents', 'tender_sequences']))->dump();
+        $db->statement("DROP DATABASE `{$scratch}`");
+
+        $target = $argv[2] ?? $basePath . '/../bd/01_schema.sql';
+        file_put_contents($target, $sql);
+        $print("Schema written to {$target}");
+        break;
+
+    case 'openapi:build':
+        (new OpenApiSpec($config['openapi_cache'], debug: false))->build();
+        $print('OpenAPI document written to ' . $config['openapi_cache']);
+        break;
+
+    default:
+        $print('Commands: migrate, migrate:status, migrate:rollback, migrate:fresh, schema:dump, openapi:build');
+}

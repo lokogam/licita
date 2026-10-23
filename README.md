@@ -127,6 +127,20 @@ mysql -u root -p suplos_tenders < bd/01_schema.sql
 mysql -u root -p suplos_tenders < bd/02_activities.sql
 ```
 
+### Migraciones versionadas
+
+La estructura vive en `backend/database/migrations` (Schema Builder de `illuminate/database`) y se aplica sola al arrancar el contenedor del backend. Comandos:
+
+```bash
+php bin/console migrate            # aplica las migraciones pendientes
+php bin/console migrate:status     # lista migraciones y su estado
+php bin/console migrate:rollback   # revierte el último lote
+php bin/console migrate:fresh      # reconstruye desde cero (solo desarrollo)
+php bin/console schema:dump        # regenera bd/01_schema.sql desde las migraciones
+```
+
+Una base creada con los scripts de `bd/` se detecta y se marca como migrada (baseline). Hay un test que falla si `bd/01_schema.sql` deja de coincidir con las migraciones.
+
 `02_activities.sql` se generó desde el Excel oficial con `php backend/bin/unspsc-to-sql.php <archivo.xlsx>`, con pruebas propias del parser y del escape de SQL.
 
 ### Equivalencia con el modelo de la prueba

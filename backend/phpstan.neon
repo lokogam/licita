@@ -5,4 +5,5 @@ parameters:
         - bootstrap
         - config
         - routes
+        - database
     tmpDir: .phpunit.cache/phpstan

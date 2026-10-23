@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Core\Container;
+use App\Database\Migrator;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Core\Kernel;
@@ -15,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Base class for tests that hit MySQL.
  *
- * The schema from bd/01_schema.sql is loaded once per run and every test
+ * The schema is built from the migrations once per run and every test
  * runs inside a transaction that is rolled back afterwards.
  */
 abstract class DatabaseTestCase extends TestCase
@@ -30,10 +31,11 @@ abstract class DatabaseTestCase extends TestCase
     {
         parent::setUp();
 
-        self::loadSchemaOnce();
+        self::ensureDatabaseExists();
 
         $this->kernel = require __DIR__ . '/../bootstrap/app.php';
         $this->container = $container; // defined by bootstrap/app.php
+        self::migrateOnce();
 
         Capsule::connection()->beginTransaction();
     }
@@ -64,7 +66,7 @@ abstract class DatabaseTestCase extends TestCase
         return json_decode($response->content(), true, flags: JSON_THROW_ON_ERROR);
     }
 
-    private static function loadSchemaOnce(): void
+    private static function ensureDatabaseExists(): void
     {
         if (self::$schemaLoaded) {
             return;
@@ -79,8 +81,18 @@ abstract class DatabaseTestCase extends TestCase
         );
 
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $pdo->exec("USE `{$database}`");
-        $pdo->exec((string) file_get_contents(__DIR__ . '/../../bd/01_schema.sql'));
+    }
+
+    /**
+     * The test database is rebuilt from the versioned migrations once per run.
+     */
+    private static function migrateOnce(): void
+    {
+        if (self::$schemaLoaded) {
+            return;
+        }
+
+        (new Migrator(Capsule::connection(), __DIR__ . '/../database/migrations'))->fresh();
 
         self::$schemaLoaded = true;
     }
