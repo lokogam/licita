@@ -1,18 +1,5 @@
 # ---------------------------------------------------------------------------
-# Stage 1: build the Vue SPA
-# ---------------------------------------------------------------------------
-FROM node:22-alpine AS frontend-build
-
-WORKDIR /app
-
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci --no-audit --no-fund
-
-COPY frontend/ ./
-RUN npm run build
-
-# ---------------------------------------------------------------------------
-# Stage 2: PHP 8.2 + Apache runtime shared by development and production
+# Backend: PHP 8.2 + Apache serving the REST API
 # ---------------------------------------------------------------------------
 FROM php:8.2-apache AS base
 
@@ -31,21 +18,20 @@ RUN a2enconf zz-security
 WORKDIR /var/www/html
 
 # ---------------------------------------------------------------------------
-# Stage 3: development image (source code is bind-mounted by Compose)
+# Development: source code is bind-mounted by Compose; pcov enables coverage
 # ---------------------------------------------------------------------------
 FROM base AS development
 
 RUN install-php-extensions pcov
 
 # ---------------------------------------------------------------------------
-# Stage 4: production image (API + compiled SPA in one container)
+# Production: dependencies and source baked into the image
 # ---------------------------------------------------------------------------
 FROM base AS production
 
-COPY backend/composer.json backend/composer.lock ./
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-scripts --optimize-autoloader
 
-COPY backend/ ./
-COPY --from=frontend-build /app/dist/ ./public/
+COPY . .
 
 RUN chown -R www-data:www-data storage
