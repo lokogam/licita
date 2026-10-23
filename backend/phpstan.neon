@@ -2,4 +2,7 @@ parameters:
     level: 8
     paths:
         - app
+        - bootstrap
+        - config
+        - routes
     tmpDir: .phpunit.cache/phpstan

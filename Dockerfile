@@ -19,7 +19,7 @@ FROM php:8.2-apache AS base
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-RUN install-php-extensions pdo_mysql zip gd \
+RUN install-php-extensions bcmath pdo_mysql zip gd \
     && a2enmod rewrite headers
 
 COPY docker/apache/vhost.conf /etc/apache2/sites-available/000-default.conf

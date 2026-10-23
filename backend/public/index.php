@@ -6,8 +6,10 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+use App\Core\Http\Request;
+use App\Core\Kernel;
 
-header('Content-Type: application/json; charset=utf-8');
+/** @var Kernel $kernel */
+$kernel = require __DIR__ . '/../bootstrap/app.php';
 
-echo json_encode(['status' => 'ok']);
+$kernel->handle(Request::capture())->send();
