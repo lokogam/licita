@@ -9,6 +9,7 @@
         "ext-fileinfo": "*",
         "ext-pdo": "*",
         "illuminate/database": "^11.0",
+        "phpoffice/phpspreadsheet": "^3.0",
         "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {

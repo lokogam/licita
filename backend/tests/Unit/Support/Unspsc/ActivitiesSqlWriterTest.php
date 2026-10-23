@@ -62,7 +62,7 @@ final class ActivitiesSqlWriterTest extends TestCase
         $this->assertSame(3, $count);
         $this->assertSame(2, substr_count($sql, 'INSERT INTO activities'));
         $this->assertStringContainsString("'Producto con ''comillas'''", $sql);
-        $this->assertStringContainsString("'Ruta C:\\temp'", $sql);
+        $this->assertStringContainsString("'Ruta C:\\\\temp'", $sql);
         $this->assertStringNotContainsString('Duplicado', $sql);
         $this->assertStringStartsWith('SET NAMES utf8mb4;', $sql);
     }
