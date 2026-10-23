@@ -5,6 +5,9 @@ services:
     build:
       context: ./frontend
       target: production
+      args:
+        # Local stack only: the login screen lists the public demo accounts.
+        VITE_SHOW_DEMO_USERS: "true"
     ports:
       - "${APP_PORT:-8080}:80"
     depends_on:
@@ -24,6 +27,8 @@ services:
       DB_DATABASE: ${DB_DATABASE:-suplos_tenders}
       DB_USERNAME: ${DB_USERNAME:-suplos}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+      # Plain HTTP on localhost: the refresh cookie cannot require HTTPS here.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CLAMAV_ENABLED: ${CLAMAV_ENABLED:-false}
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310

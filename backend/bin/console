@@ -10,11 +10,18 @@
  *   php bin/console migrate:fresh       Drop all tables and migrate again (development only)
  *   php bin/console schema:dump         Regenerate bd/01_schema.sql from the migrations
  *   php bin/console openapi:build       Pre-generate the OpenAPI document cache
+ *   php bin/console user:create "Name" email role   Create a user (password from USER_PASSWORD or generated)
+ *   php bin/console users:demo          Create/restore the public demo users (not in production)
+ *   php bin/console users:demo-sql      Regenerate bd/03_demo_users.sql
  */
 
 declare(strict_types=1);
 
 use App\Database\Migrator;
+use App\Database\Seeders\DemoUsersSeeder;
+use App\Enums\Role;
+use App\Http\Requests\StoreUserRequest;
+use App\Models\User;
 use App\Database\SchemaDumper;
 use App\Services\OpenApiSpec;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -82,6 +89,51 @@ switch ($command) {
         $print('OpenAPI document written to ' . $config['openapi_cache']);
         break;
 
+    case 'user:create':
+        // php bin/console user:create "Full Name" email@example.com admin|editor|viewer
+        // The password is read from USER_PASSWORD, or generated and printed once.
+        [$name, $email, $roleName] = [$argv[2] ?? '', $argv[3] ?? '', $argv[4] ?? ''];
+        $role = Role::tryFrom($roleName);
+        if ($name === '' || $email === '' || $role === null) {
+            fwrite(STDERR, "Usage: user:create \"Name\" email role (" . implode('|', Role::values()) . ")\n");
+            exit(1);
+        }
+        if (User::findByEmail($email) !== null) {
+            fwrite(STDERR, "A user with email {$email} already exists.\n");
+            exit(1);
+        }
+        $password = (string) getenv('USER_PASSWORD');
+        $generated = $password === '';
+        if ($generated) {
+            $password = rtrim(strtr(base64_encode(random_bytes(15)), '+/', '-_'), '=');
+        }
+        if (mb_strlen($password) < StoreUserRequest::MIN_PASSWORD) {
+            fwrite(STDERR, 'The password must have at least ' . StoreUserRequest::MIN_PASSWORD . " characters.\n");
+            exit(1);
+        }
+        $user = User::register($name, $email, $password, $role);
+        $print("Created {$role->label()} {$user->email}" . ($generated ? " with password: {$password}" : '.'));
+        break;
+
+    case 'users:demo':
+        // Local/demo environments only: one public account per role.
+        if (($config['env'] ?? 'production') === 'production' && getenv('ALLOW_DEMO_USERS') !== 'true') {
+            fwrite(STDERR, "users:demo is disabled in production (public passwords).\n");
+            exit(1);
+        }
+        (new DemoUsersSeeder())->run();
+        $print('Demo users ready: ' . implode(', ', array_column(DemoUsersSeeder::USERS, 'email')));
+        break;
+
+    case 'users:demo-sql':
+        $target = $argv[2] ?? $basePath . '/../bd/03_demo_users.sql';
+        file_put_contents($target, (new DemoUsersSeeder())->toSql());
+        $print("Demo users SQL written to {$target}");
+        break;
+
     default:
-        $print('Commands: migrate, migrate:status, migrate:rollback, migrate:fresh, schema:dump, openapi:build');
+        $print(
+            'Commands: migrate, migrate:status, migrate:rollback, migrate:fresh, schema:dump, openapi:build, '
+            . 'user:create, users:demo, users:demo-sql',
+        );
 }
