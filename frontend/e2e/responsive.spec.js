@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 test('el listado es usable en pantallas pequeñas', async ({ page }) => {
   await page.goto('/licitaciones')
