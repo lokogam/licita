@@ -61,7 +61,11 @@ abstract class DatabaseTestCase extends TestCase
             'Clave-Segura-2026',
             $role,
         );
-        $this->accessToken = $this->container->make(JwtService::class)->issue(['sub' => $this->user->id]);
+        // Far-future expiry: many tests freeze the clock at arbitrary dates.
+        $this->accessToken = $this->container->make(JwtService::class)->issue([
+            'sub' => (string) $this->user->id,
+            'exp' => 4102444800,
+        ]);
 
         return $this->user;
     }

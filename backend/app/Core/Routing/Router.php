@@ -150,7 +150,7 @@ final class Router
      */
     private function add(string $method, string $uri, Closure|array $handler): void
     {
-        $path = '/' . trim($this->prefix . '/' . trim($uri, '/'), '/');
+        $path = '/' . trim((string) preg_replace('#/+#', '/', $this->prefix . '/' . trim($uri, '/')), '/');
         $this->routes[] = new Route($method, $path, $handler, $this->groupMiddleware);
     }
 

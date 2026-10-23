@@ -12,4 +12,4 @@ use App\Core\Kernel;
 /** @var Kernel $kernel */
 $kernel = require __DIR__ . '/../bootstrap/app.php';
 
-$kernel->handle(Request::capture())->send();
+$kernel->handle(Request::capture($kernel->trustsProxy()))->send();

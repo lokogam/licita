@@ -34,10 +34,14 @@ final class Request
     /** @var array<string, mixed> Values attached by middleware (e.g. the authenticated user). */
     private array $attributes = [];
 
+    private string $clientIp = '127.0.0.1';
+
     /**
      * Builds a request from PHP superglobals.
+     *
+     * @param bool $trustProxy Take the client IP from X-Forwarded-For (only behind a known proxy).
      */
-    public static function capture(): self
+    public static function capture(bool $trustProxy = false): self
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
@@ -49,7 +53,7 @@ final class Request
             $headers['Content-Type'] = (string) $_SERVER['CONTENT_TYPE'];
         }
 
-        return self::create(
+        $request = self::create(
             (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
             (string) ($_SERVER['REQUEST_URI'] ?? '/'),
             $_GET,
@@ -59,6 +63,30 @@ final class Request
             (string) file_get_contents('php://input'),
             array_map('strval', $_COOKIE),
         );
+
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        $forwarded = $request->header('X-Forwarded-For');
+        if ($trustProxy && $forwarded !== null) {
+            $ip = trim(explode(',', $forwarded)[0]);
+        }
+
+        return $request->withClientIp($ip);
+    }
+
+    /**
+     * Returns a copy with the address of the client.
+     */
+    public function withClientIp(string $ip): self
+    {
+        $clone = clone $this;
+        $clone->clientIp = $ip;
+
+        return $clone;
+    }
+
+    public function ip(): string
+    {
+        return $this->clientIp;
     }
 
     /**

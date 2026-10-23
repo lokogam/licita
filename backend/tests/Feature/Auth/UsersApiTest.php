@@ -51,7 +51,7 @@ final class UsersApiTest extends DatabaseTestCase
         $errors = $this->json($response)['errors'];
         $this->assertArrayHasKey('name', $errors);
         $this->assertSame(['Ya existe un usuario con ese correo.'], $errors['email']);
-        $this->assertSame(['La contraseña debe tener al menos 10 caracteres.'], $errors['password']);
+        $this->assertSame(['El campo contraseña debe tener al menos 10 caracteres.'], $errors['password']);
         $this->assertArrayHasKey('role', $errors);
     }
 

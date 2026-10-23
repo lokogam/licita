@@ -6,6 +6,7 @@ namespace App\Validation;
 
 use App\Validation\Rules\ArrayType;
 use App\Validation\Rules\DateFormat;
+use App\Validation\Rules\Email;
 use App\Validation\Rules\Decimal;
 use App\Validation\Rules\File;
 use App\Validation\Rules\GreaterThan;
@@ -15,6 +16,7 @@ use App\Validation\Rules\Max;
 use App\Validation\Rules\MaxKilobytes;
 use App\Validation\Rules\MaxValue;
 use App\Validation\Rules\Mimes;
+use App\Validation\Rules\Min;
 use App\Validation\Rules\MinItems;
 use App\Validation\Rules\Required;
 use App\Validation\Rules\StringType;
@@ -190,6 +192,8 @@ final class Validator
             'integer' => new IntegerType(),
             'array' => new ArrayType(),
             'max' => new Max((int) $argument),
+            'min' => new Min((int) $argument),
+            'email' => new Email(),
             'in' => new In(explode(',', $argument)),
             'decimal' => new Decimal((int) $argument),
             'gt' => new GreaterThan($argument),
