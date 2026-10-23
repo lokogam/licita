@@ -31,4 +31,6 @@ $router->group('/api', function (Router $router): void {
         '/tenders/{id:\d+}/documents/{document:\d+}/download',
         [TenderDocumentController::class, 'download'],
     );
+    $router->patch('/tenders/{id:\d+}/documents/{document:\d+}', [TenderDocumentController::class, 'update']);
+    $router->delete('/tenders/{id:\d+}/documents/{document:\d+}', [TenderDocumentController::class, 'destroy']);
 });

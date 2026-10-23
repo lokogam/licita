@@ -21,6 +21,7 @@ $forced = [
     'DB_USERNAME' => 'root',
     'DB_PASSWORD' => getenv('DB_ROOT_PASSWORD') ?: 'root',
     'DOCUMENTS_PATH' => sys_get_temp_dir() . '/tenders-test-documents',
+    'OPENAPI_CACHE' => sys_get_temp_dir() . '/tenders-openapi-' . getmypid() . '.json',
 ];
 
 foreach ($defaults as $key => $value) {
