@@ -9,6 +9,7 @@ use App\Core\Http\FileResponse;
 use App\Core\Http\Request;
 use App\Models\TenderDocument;
 use App\Services\DocumentStorage;
+use OpenApi\Attributes as OA;
 
 /**
  * Serves stored tender documents (they are never exposed from the public folder).
@@ -22,6 +23,32 @@ final class TenderDocumentController
     /**
      * GET /api/tenders/{id}/documents/{document}/download
      */
+    #[OA\Get(
+        path: '/api/tenders/{id}/documents/{document}/download',
+        summary: 'Descargar un documento de la licitación',
+        tags: ['Documentos'],
+        parameters: [
+            new OA\PathParameter(name: 'id', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\PathParameter(name: 'document', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Archivo PDF o ZIP',
+                content: [
+                    new OA\MediaType(
+                        mediaType: 'application/pdf',
+                        schema: new OA\Schema(type: 'string', format: 'binary'),
+                    ),
+                    new OA\MediaType(
+                        mediaType: 'application/zip',
+                        schema: new OA\Schema(type: 'string', format: 'binary'),
+                    ),
+                ],
+            ),
+            new OA\Response(ref: '#/components/responses/NotFound', response: 404),
+        ],
+    )]
     public function download(Request $request): FileResponse
     {
         $document = TenderDocument::query()
