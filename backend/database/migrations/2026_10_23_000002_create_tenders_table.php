@@ -12,6 +12,11 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 
 return new class extends Migration {
+    public function tables(): array
+    {
+        return ['tenders'];
+    }
+
     public function up(Connection $db): void
     {
         $db->getSchemaBuilder()->create('tenders', function (Blueprint $table): void {

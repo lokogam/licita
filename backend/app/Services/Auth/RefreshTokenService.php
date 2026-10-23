@@ -62,7 +62,7 @@ final class RefreshTokenService
             throw new AuthenticationException();
         }
 
-        $record->revoked_at = $this->clock->now();
+        $record->revoked_at = Carbon::instance($this->clock->now());
         $record->save();
 
         $user = $record->user;

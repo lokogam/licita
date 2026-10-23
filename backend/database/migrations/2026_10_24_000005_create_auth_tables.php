@@ -11,6 +11,11 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 
 return new class extends Migration {
+    public function tables(): array
+    {
+        return ['users', 'refresh_tokens', 'login_attempts'];
+    }
+
     public function up(Connection $db): void
     {
         $schema = $db->getSchemaBuilder();
