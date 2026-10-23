@@ -49,4 +49,21 @@ describe('DocumentsSection', () => {
 
     expect(wrapper.emitted('update:modelValue')[0][0]).toEqual([])
   })
+
+  it('asks the parent to edit or delete saved documents', async () => {
+    const two = [...existing, { ...existing[0], id: 2, original_name: 'anexo.zip' }]
+    const wrapper = mount(DocumentsSection, { props: { existing: two, modelValue: [] } })
+
+    await wrapper.get('button[aria-label="Editar pliego.pdf"]').trigger('click')
+    await wrapper.get('button[aria-label="Eliminar anexo.zip"]').trigger('click')
+
+    expect(wrapper.emitted('edit-existing')[0][0].id).toBe(1)
+    expect(wrapper.emitted('delete-existing')[0][0].id).toBe(2)
+  })
+
+  it('does not allow deleting the only saved document', () => {
+    const wrapper = mount(DocumentsSection, { props: { existing, modelValue: [] } })
+
+    expect(wrapper.get('button[aria-label="Eliminar pliego.pdf"]').attributes('disabled')).toBeDefined()
+  })
 })

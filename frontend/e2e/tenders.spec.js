@@ -7,6 +7,9 @@ const PDF = {
   buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n'),
 }
 
+// Minimal valid ZIP archive (empty end-of-central-directory record).
+const ZIP = Buffer.from([0x50, 0x4b, 0x05, 0x06, ...new Array(18).fill(0)])
+
 const uniqueSubject = () => `Compra de portátiles E2E ${Date.now()}`
 
 const tenderData = (subject) => ({
@@ -101,5 +104,34 @@ test.describe('Módulo de licitaciones', () => {
 
     await expect(dialog.getByText('Solo se permiten archivos PDF o ZIP.')).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Agregar', exact: true })).toBeDisabled()
+  })
+
+  test('edita y elimina documentos guardados conservando al menos uno', async ({ page }) => {
+    const form = new TenderFormPage(page)
+    await form.gotoCreate()
+    await form.fill(tenderData(uniqueSubject()))
+    await form.submitButton('Crear licitación').click()
+    await page.getByRole('link', { name: 'Editar' }).click()
+
+    await form.addDocument({ title: 'Pliego', description: 'Pliego inicial', file: PDF })
+    await form.addDocument({
+      title: 'Anexos',
+      description: 'Anexos técnicos',
+      file: { name: 'anexos.zip', mimeType: 'application/zip', buffer: ZIP },
+    })
+    await form.submitButton('Guardar cambios').click()
+    await expect(page).toHaveURL(/\/licitaciones\/\d+$/)
+    await page.getByRole('link', { name: 'Editar' }).click()
+
+    await page.getByRole('button', { name: 'Editar Pliego de condiciones.pdf' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Editar documento' })
+    await dialog.getByLabel('Título').fill('Pliego definitivo')
+    await dialog.getByRole('button', { name: 'Guardar' }).click()
+    await expect(page.getByRole('cell', { name: 'Pliego definitivo' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Eliminar anexos.zip' }).click()
+    await page.getByRole('dialog', { name: 'Eliminar documento' }).getByRole('button', { name: 'Eliminar' }).click()
+    await expect(page.getByText('anexos.zip')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Eliminar Pliego de condiciones.pdf' })).toBeDisabled()
   })
 })

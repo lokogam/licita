@@ -63,6 +63,14 @@ final class Router
     }
 
     /**
+     * @param Closure|array{0: class-string, 1: string} $handler
+     */
+    public function patch(string $uri, Closure|array $handler): void
+    {
+        $this->add('PATCH', $uri, $handler);
+    }
+
+    /**
      * Registers the routes defined in the callback under a common prefix.
      *
      * @param callable(Router): void $routes

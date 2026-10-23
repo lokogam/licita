@@ -166,4 +166,10 @@ describe('validateDocument', () => {
       validateDocument({ title: 'x', description: 'x', file: file('a.pdf', 'application/pdf', 11 * 1024 * 1024) }).file,
     ).toBe('El archivo no debe superar 10 MB.')
   })
+
+  it('can make the file optional when editing an existing document', () => {
+    expect(validateDocument({ title: 'Pliego', description: 'Principal', file: null }, { requireFile: false })).toEqual(
+      {},
+    )
+  })
 })

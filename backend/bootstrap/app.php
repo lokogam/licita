@@ -26,7 +26,7 @@ require_once $basePath . '/vendor/autoload.php';
 
 Dotenv::createImmutable($basePath)->safeLoad();
 
-/** @var array{env: string, debug: bool, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string} $config */
+/** @var array{env: string, debug: bool, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string, openapi_cache: string} $config */
 $config = require $basePath . '/config/app.php';
 
 date_default_timezone_set($config['timezone']);
@@ -46,7 +46,7 @@ $container->singleton(Clock::class, SystemClock::class);
 $container->singleton(DocumentStorage::class, fn (): DocumentStorage => new DocumentStorage($config['documents_path']));
 $container->singleton(
     OpenApiSpec::class,
-    fn (): OpenApiSpec => new OpenApiSpec($config['storage_path'] . '/cache/openapi.json', $config['debug']),
+    fn (): OpenApiSpec => new OpenApiSpec($config['openapi_cache'], $config['debug']),
 );
 
 $router = new Router($container);
