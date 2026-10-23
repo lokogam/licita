@@ -75,6 +75,26 @@ final class KernelTest extends TestCase
         $this->assertStringNotContainsString('SQLSTATE', $response->content());
     }
 
+    public function test_it_rejects_malformed_json_bodies_with_400(): void
+    {
+        $kernel = $this->kernel(function (Router $router): void {
+            $router->post('/api/items', fn (): JsonResponse => new JsonResponse([], 201));
+        });
+
+        $response = $kernel->handle(Request::create(
+            'POST',
+            '/api/items',
+            headers: ['Content-Type' => 'application/json'],
+            rawBody: "{\"subject\": \"Compra de portátiles\"}",
+        ));
+
+        $this->assertSame(400, $response->status());
+        $this->assertSame(
+            'El cuerpo de la petición no es un JSON válido (verifique que esté codificado en UTF-8).',
+            $this->json($response)['message'],
+        );
+    }
+
     public function test_it_answers_cors_preflight_requests(): void
     {
         $response = $this->kernel()->handle(Request::create('OPTIONS', '/api/tenders'));
