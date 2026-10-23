@@ -3,16 +3,9 @@ Options -Indexes -MultiViews
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # API requests go to the PHP front controller.
-    RewriteRule ^api(/.*)?$ index.php [L,QSA]
-
-    # Existing files (SPA assets) are served as-is.
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteRule ^ - [L]
-
-    # Any other route belongs to the Vue SPA (history mode).
-    RewriteRule ^ index.html [L]
+    # Every request that is not an existing file goes to the front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
 <IfModule mod_headers.c>
