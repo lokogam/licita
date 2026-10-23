@@ -7,6 +7,8 @@ use App\Core\Support\Env;
 return [
     'env' => Env::get('APP_ENV', 'production'),
     'debug' => Env::bool('APP_DEBUG'),
+    // Secret used to sign pagination cursors (set a random value per environment).
+    'key' => Env::get('APP_KEY', 'local-development-key'),
     'url' => Env::get('APP_URL', 'http://localhost:8080'),
     'timezone' => Env::get('APP_TIMEZONE', 'America/Bogota'),
     'cors_origin' => Env::get('CORS_ALLOWED_ORIGIN', '*'),
