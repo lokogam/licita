@@ -16,9 +16,24 @@ use App\Models\User;
 final class DemoUsersSeeder
 {
     public const USERS = [
-        ['name' => 'Administrador Demo', 'email' => 'admin@suplos.test', 'password' => 'Admin-Demo-2026', 'role' => Role::Admin],
-        ['name' => 'Editor Demo', 'email' => 'editor@suplos.test', 'password' => 'Editor-Demo-2026', 'role' => Role::Editor],
-        ['name' => 'Lector Demo', 'email' => 'lector@suplos.test', 'password' => 'Lector-Demo-2026', 'role' => Role::Viewer],
+        [
+            'name' => 'Administrador Demo',
+            'email' => 'admin@suplos.test',
+            'password' => 'Admin-Demo-2026',
+            'role' => Role::Admin,
+        ],
+        [
+            'name' => 'Editor Demo',
+            'email' => 'editor@suplos.test',
+            'password' => 'Editor-Demo-2026',
+            'role' => Role::Editor,
+        ],
+        [
+            'name' => 'Lector Demo',
+            'email' => 'lector@suplos.test',
+            'password' => 'Lector-Demo-2026',
+            'role' => Role::Viewer,
+        ],
     ];
 
     public function run(): void
