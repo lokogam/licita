@@ -15,7 +15,13 @@ import { saveBlob } from '@/utils/download'
 import { formatDate } from '@/utils/formatters'
 
 const PER_PAGE = 10
-const FILTER_KEYS = ['consecutive', 'subject', 'description']
+const FILTER_KEYS = ['consecutive', 'subject', 'description', 'status']
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todos' },
+  { value: 'scheduled', label: 'Programada' },
+  { value: 'open', label: 'Abierta' },
+  { value: 'closed', label: 'Cerrada' },
+]
 
 const route = useRoute()
 const router = useRouter()
@@ -53,14 +59,16 @@ async function load() {
 
 watch(() => route.query, load, { immediate: true })
 
-const applyFilters = useDebouncedFn(() => {
+function applyFiltersNow() {
   const query = Object.fromEntries(
     Object.entries(filters)
       .map(([key, value]) => [key, value.trim()])
       .filter(([, value]) => value !== ''),
   )
   router.replace({ query })
-}, 300)
+}
+
+const applyFilters = useDebouncedFn(applyFiltersNow, 300)
 
 function clearFilters() {
   FILTER_KEYS.forEach((key) => (filters[key] = ''))
@@ -103,7 +111,7 @@ async function exportExcel() {
     <section class="card filters-card mb-3" aria-label="Filtros">
       <div class="card-body">
         <div class="row g-2 align-items-end">
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label for="filter-consecutive" class="form-label small">Consecutivo</label>
             <div class="input-icon">
               <i class="bi bi-hash" aria-hidden="true"></i>
@@ -117,7 +125,7 @@ async function exportExcel() {
               />
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="filter-subject" class="form-label small">Objeto</label>
             <div class="input-icon">
               <i class="bi bi-search" aria-hidden="true"></i>
@@ -131,7 +139,7 @@ async function exportExcel() {
               />
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="filter-description" class="form-label small">Descripción</label>
             <div class="input-icon">
               <i class="bi bi-text-left" aria-hidden="true"></i>
@@ -144,6 +152,14 @@ async function exportExcel() {
                 @input="applyFilters"
               />
             </div>
+          </div>
+          <div class="col-md-3">
+            <label for="filter-status" class="form-label small">Estado</label>
+            <select id="filter-status" v-model="filters.status" class="form-select" @change="applyFiltersNow">
+              <option v-for="option in STATUS_OPTIONS" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </div>
           <div class="col-md-1 text-md-end">
             <button v-if="hasFilters" type="button" class="btn btn-link btn-sm px-0" @click="clearFilters">

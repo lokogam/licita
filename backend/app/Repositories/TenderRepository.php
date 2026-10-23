@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Exceptions\NotFoundHttpException;
+use App\Enums\TenderStatus;
 use App\Models\Tender;
+use App\Support\Clock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -26,6 +28,10 @@ final class TenderRepository
         'closing_time',
         'status',
     ];
+
+    public function __construct(private readonly Clock $clock)
+    {
+    }
 
     public function findOrFail(int $id): Tender
     {
@@ -79,7 +85,28 @@ final class TenderRepository
             }
         }
 
+        if ($filters->status !== null) {
+            $this->whereStatus($query, $filters->status);
+        }
+
         return $query;
+    }
+
+    /**
+     * Translates a status into ranges over the indexed starts_at / closes_at columns.
+     * Mirrors TenderStatus::fromSchedule: open from the start instant, closed from the closing instant.
+     *
+     * @param Builder<Tender> $query
+     */
+    private function whereStatus(Builder $query, TenderStatus $status): void
+    {
+        $now = $this->clock->now()->format('Y-m-d H:i:s');
+
+        match ($status) {
+            TenderStatus::Scheduled => $query->where('starts_at', '>', $now),
+            TenderStatus::Open => $query->where('starts_at', '<=', $now)->where('closes_at', '>', $now),
+            TenderStatus::Closed => $query->where('closes_at', '<=', $now),
+        };
     }
 
     /**
