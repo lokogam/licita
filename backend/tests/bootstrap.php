@@ -20,6 +20,7 @@ $forced = [
     'DB_DATABASE' => getenv('DB_TEST_DATABASE') ?: 'suplos_tenders_test',
     'DB_USERNAME' => 'root',
     'DB_PASSWORD' => getenv('DB_ROOT_PASSWORD') ?: 'root',
+    'DOCUMENTS_PATH' => sys_get_temp_dir() . '/tenders-test-documents',
 ];
 
 foreach ($defaults as $key => $value) {
