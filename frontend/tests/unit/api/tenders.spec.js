@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildUpdateFormData, filenameFromDisposition } from '@/api/tenders'
+import { buildDocumentFormData, buildUpdateFormData, filenameFromDisposition } from '@/api/tenders'
 import { toApiError } from '@/api/http'
 
 describe('tenders api helpers', () => {
@@ -15,6 +15,16 @@ describe('tenders api helpers', () => {
     expect(data.get('documents[0][title]')).toBe('Pliego')
     expect(data.get('documents[0][description]')).toBe('Principal')
     expect(data.get('documents[0][file]')).toBeInstanceOf(File)
+  })
+
+  it('builds the multipart payload to edit a document, omitting an unchanged file', () => {
+    const withoutFile = buildDocumentFormData({ title: 'Pliego', description: 'Final', file: null })
+    expect(withoutFile.get('_method')).toBe('PATCH')
+    expect(withoutFile.get('title')).toBe('Pliego')
+    expect(withoutFile.has('file')).toBe(false)
+
+    const file = new File(['%PDF'], 'nuevo.pdf', { type: 'application/pdf' })
+    expect(buildDocumentFormData({ title: 'Pliego', description: 'Final', file }).get('file')).toBeInstanceOf(File)
   })
 
   it('reads the file name from Content-Disposition', () => {
