@@ -2,6 +2,10 @@
 
 Módulo para **crear, editar (con carga de documentos), listar, filtrar, consultar y exportar a Excel** licitaciones (ofertas).
 
+**Demo en vivo:** https://licitaciones.duvangamboa.dev · **API (Swagger):** https://licitaciones.duvangamboa.dev/api/docs
+
+> Desplegado en el plan gratuito de Render: si no ha tenido visitas recientes, la primera carga puede tardar ~50 s mientras el servicio se activa.
+
 | Capa | Tecnología |
 |---|---|
 | Backend | PHP 8.2 **sin framework**, patrón MVC, Eloquent standalone (`illuminate/database`) como ORM |
