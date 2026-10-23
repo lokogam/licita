@@ -1,0 +1,62 @@
+// Brand palette (Suplos)
+$navy: #262f6b;
+$blue: #2878b8;
+$sky: #2bb3e6;
+$ink: #1f2540;
+$muted: #6b7393;
+$line: #e3e7f0;
+$canvas: #f4f6fb;
+
+// Bootstrap overrides
+$primary: $blue;
+$secondary: #5b6280;
+$success: #1f9d6b;
+$warning: #e0a100;
+$danger: #d64545;
+$info: $sky;
+$dark: $navy;
+
+$body-bg: $canvas;
+$body-color: $ink;
+$body-secondary-color: $muted;
+$border-color: $line;
+
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-size-base: 0.9375rem;
+$headings-font-weight: 600;
+$headings-color: $ink;
+$line-height-base: 1.55;
+
+$border-radius: 0.5rem;
+$border-radius-sm: 0.375rem;
+$border-radius-lg: 0.75rem;
+
+$card-border-color: $line;
+$card-border-radius: 0.875rem;
+$card-cap-bg: transparent;
+$card-spacer-y: 1.5rem;
+$card-spacer-x: 1.5rem;
+
+$input-border-color: #d5dbe8;
+$input-focus-border-color: $blue;
+$input-placeholder-color: #9aa1bb;
+$input-btn-focus-color-opacity: 0.18;
+$form-label-font-weight: 500;
+$form-label-color: $ink;
+
+$btn-font-weight: 500;
+$btn-padding-x: 1rem;
+
+$table-cell-padding-y: 0.85rem;
+$table-cell-padding-x: 1rem;
+$table-hover-bg-factor: 0.035;
+
+$nav-underline-link-active-color: $navy;
+$nav-underline-gap: 1.75rem;
+
+$modal-content-border-radius: 1rem;
+$modal-backdrop-opacity: 0.4;
+
+$pagination-border-radius: 0.5rem;
+$pagination-active-bg: $navy;
+$pagination-active-border-color: $navy;

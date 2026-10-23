@@ -6,6 +6,7 @@ services:
       target: development
     environment:
       VITE_API_PROXY_TARGET: http://backend
+      VITE_USE_POLLING: "true"
     ports: !override
       - "${WEB_PORT:-5173}:5173"
     volumes:

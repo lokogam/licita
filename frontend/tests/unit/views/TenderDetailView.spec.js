@@ -52,7 +52,10 @@ async function mountView() {
 }
 
 describe('TenderDetailView', () => {
-  beforeEach(() => getTender.mockReset().mockResolvedValue(tender))
+  beforeEach(() => {
+    getTender.mockReset()
+    getTender.mockResolvedValue(tender)
+  })
 
   it('shows the header, status and an edit button', async () => {
     const wrapper = await mountView()
@@ -80,7 +83,9 @@ describe('TenderDetailView', () => {
   })
 
   it('shows a not found message for unknown tenders', async () => {
-    getTender.mockRejectedValue({ status: 404, message: 'La licitación solicitada no existe.', errors: {} })
+    getTender.mockImplementation(async () => {
+      throw { status: 404, message: 'La licitación solicitada no existe.', errors: {} }
+    })
     const wrapper = await mountView()
 
     expect(wrapper.text()).toContain('La licitación solicitada no existe.')

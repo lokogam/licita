@@ -12,9 +12,17 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  css: {
+    preprocessorOptions: {
+      // Bootstrap 5.3 still relies on @import and global Sass functions.
+      scss: { silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'if-function'] },
+    },
+  },
   server: {
     host: true,
     port: 5173,
+    // Bind mounts on Windows/macOS do not propagate file events into containers.
+    watch: { usePolling: process.env.VITE_USE_POLLING === 'true', interval: 300 },
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
     },
