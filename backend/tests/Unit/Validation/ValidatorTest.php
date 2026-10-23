@@ -107,7 +107,7 @@ final class ValidatorTest extends TestCase
 
     public function test_exists_rule_uses_the_given_lookup(): void
     {
-        $exists = new Exists(fn (mixed $value): bool => $value === '7', 'actividad');
+        $exists = new Exists(fn (mixed $value): bool => $value === '7', 'La actividad seleccionada no existe.');
 
         $this->assertFalse((new Validator(['activity_id' => '7'], ['activity_id' => [$exists]]))->fails());
         $this->assertSame(
@@ -153,7 +153,10 @@ final class ValidatorTest extends TestCase
 
     public function test_after_hooks_can_add_cross_field_errors(): void
     {
-        $validator = new Validator(['start' => '10:00', 'end' => '09:00'], ['start' => ['required'], 'end' => ['required']]);
+        $validator = new Validator(
+            ['start' => '10:00', 'end' => '09:00'],
+            ['start' => ['required'], 'end' => ['required']],
+        );
         $validator->after(function (Validator $v, array $data): void {
             if ($data['end'] <= $data['start']) {
                 $v->addError('end', 'La hora de cierre debe ser mayor a la hora de inicio.');

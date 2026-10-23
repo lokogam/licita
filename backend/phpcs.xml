@@ -11,6 +11,11 @@
 
     <rule ref="PSR12"/>
 
+    <!-- Small test doubles live next to the test that uses them. -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+
     <!-- Test method names use snake_case for readability (test_it_does_something). -->
     <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
         <exclude-pattern>tests/*</exclude-pattern>
