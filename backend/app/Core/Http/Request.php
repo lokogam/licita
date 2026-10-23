@@ -14,7 +14,7 @@ final class Request
      * @param array<string, mixed> $body
      * @param array<string, mixed> $files  Normalized tree of UploadedFile instances.
      * @param array<string, string> $headers Header names in lower case.
-     * @param array<string, string> $routeParams
+     * @param array<string, string> $cookies
      */
     private function __construct(
         private readonly string $method,
@@ -23,10 +23,16 @@ final class Request
         private readonly array $body,
         private readonly array $files,
         private readonly array $headers,
-        private readonly array $routeParams = [],
+        private readonly array $cookies = [],
         private readonly bool $malformedBody = false,
     ) {
     }
+
+    /** @var array<string, string> Parameters captured by the matched route. */
+    private array $routeParams = [];
+
+    /** @var array<string, mixed> Values attached by middleware (e.g. the authenticated user). */
+    private array $attributes = [];
 
     /**
      * Builds a request from PHP superglobals.
@@ -51,6 +57,7 @@ final class Request
             self::normalizeFiles($_FILES),
             $headers,
             (string) file_get_contents('php://input'),
+            array_map('strval', $_COOKIE),
         );
     }
 
@@ -62,6 +69,7 @@ final class Request
      * @param array<string, mixed> $files
      * @param array<string, string> $headers
      * @param string|null $rawBody Request payload; decoded when the content type is JSON.
+     * @param array<string, string> $cookies
      */
     public static function create(
         string $method,
@@ -71,6 +79,7 @@ final class Request
         array $files = [],
         array $headers = [],
         ?string $rawBody = null,
+        array $cookies = [],
     ): self {
         $headers = array_change_key_case($headers, CASE_LOWER);
         $malformed = false;
@@ -106,7 +115,7 @@ final class Request
             $body,
             $files,
             $headers,
-            [],
+            $cookies,
             $malformed,
         );
     }
@@ -118,16 +127,41 @@ final class Request
      */
     public function withRouteParams(array $params): self
     {
-        return new self(
-            $this->method,
-            $this->path,
-            $this->query,
-            $this->body,
-            $this->files,
-            $this->headers,
-            $params,
-            $this->malformedBody,
-        );
+        $clone = clone $this;
+        $clone->routeParams = $params;
+
+        return $clone;
+    }
+
+    /**
+     * Returns a copy carrying an extra value (used by middleware, e.g. the authenticated user).
+     */
+    public function withAttribute(string $name, mixed $value): self
+    {
+        $clone = clone $this;
+        $clone->attributes[$name] = $value;
+
+        return $clone;
+    }
+
+    public function attribute(string $name, mixed $default = null): mixed
+    {
+        return $this->attributes[$name] ?? $default;
+    }
+
+    public function cookie(string $name): ?string
+    {
+        return $this->cookies[$name] ?? null;
+    }
+
+    /**
+     * Token sent as "Authorization: Bearer <token>", or null.
+     */
+    public function bearerToken(): ?string
+    {
+        $header = $this->header('Authorization') ?? '';
+
+        return preg_match('/^Bearer\s+(\S+)$/i', $header, $matches) === 1 ? $matches[1] : null;
     }
 
     /**
