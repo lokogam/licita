@@ -45,7 +45,13 @@ function add() {
 </script>
 
 <template>
-  <AppModal :show="show" title="Agregar documento" icon="bi-file-earmark-arrow-up" title-id="document-modal-title" @close="emit('close')">
+  <AppModal
+    :show="show"
+    title="Agregar documento"
+    icon="bi-file-earmark-arrow-up"
+    title-id="document-modal-title"
+    @close="emit('close')"
+  >
     <div class="d-grid gap-3">
       <FormField
         label="Título"

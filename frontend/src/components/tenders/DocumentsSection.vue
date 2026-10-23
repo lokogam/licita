@@ -24,7 +24,10 @@ function add(document) {
 }
 
 function remove(index) {
-  emit('update:modelValue', props.modelValue.filter((_, i) => i !== index))
+  emit(
+    'update:modelValue',
+    props.modelValue.filter((_, i) => i !== index),
+  )
 }
 
 const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earmark-zip' : 'bi-file-earmark-pdf')

@@ -1,7 +1,9 @@
 @import 'variables';
 @import 'bootstrap/scss/bootstrap';
 
-$shadow-soft: 0 1px 2px rgba(16, 24, 64, 0.05), 0 6px 20px rgba(16, 24, 64, 0.05);
+$shadow-soft:
+  0 1px 2px rgba(16, 24, 64, 0.05),
+  0 6px 20px rgba(16, 24, 64, 0.05);
 
 // ---------------------------------------------------------------------------
 // Base

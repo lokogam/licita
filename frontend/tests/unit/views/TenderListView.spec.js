@@ -52,7 +52,15 @@ describe('TenderListView', () => {
     const { wrapper } = await mountView()
 
     const headers = wrapper.findAll('th').map((th) => th.text())
-    expect(headers).toEqual(['Consecutivo', 'Objeto', 'Descripción', 'Fecha de inicio', 'Fecha de cierre', 'Estado', 'Acciones'])
+    expect(headers).toEqual([
+      'Consecutivo',
+      'Objeto',
+      'Descripción',
+      'Fecha de inicio',
+      'Fecha de cierre',
+      'Estado',
+      'Acciones',
+    ])
     expect(wrapper.text()).toContain('O-0005-26')
     expect(wrapper.text()).toContain('01/11/2026')
     expect(wrapper.text()).toContain('Abierta')
@@ -94,7 +102,10 @@ describe('TenderListView', () => {
     exportTenders.mockResolvedValue({ blob: new Blob(['x']), filename: 'licitaciones.xlsx' })
     const { wrapper } = await mountView({ subject: 'compra' })
 
-    await wrapper.findAll('button').find((b) => b.text().includes('Exportar Excel')).trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Exportar Excel'))
+      .trigger('click')
     await flushPromises()
 
     expect(exportTenders).toHaveBeenCalledWith({ subject: 'compra' })

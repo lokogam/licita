@@ -51,7 +51,10 @@ describe('DocumentModal', () => {
   it('emits close when cancelled', async () => {
     const wrapper = mount(DocumentModal, { props: { show: true } })
 
-    await wrapper.findAll('button').find((b) => b.text() === 'Cancelar').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() === 'Cancelar')
+      .trigger('click')
 
     expect(wrapper.emitted('close')).toHaveLength(1)
   })

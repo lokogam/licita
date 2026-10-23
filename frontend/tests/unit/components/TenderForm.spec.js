@@ -75,7 +75,9 @@ describe('TenderForm', () => {
     await flushPromises()
     await wrapper.get('#closing_time').trigger('blur')
 
-    expect(wrapper.text()).toContain('La hora de cierre debe ser mayor a la hora de inicio cuando ambas fechas son iguales.')
+    expect(wrapper.text()).toContain(
+      'La hora de cierre debe ser mayor a la hora de inicio cuando ambas fechas son iguales.',
+    )
     expect(saveButton(wrapper).attributes('disabled')).toBeDefined()
   })
 

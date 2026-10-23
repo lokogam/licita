@@ -63,7 +63,8 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
             </div>
             <h1 class="page-title mb-1">{{ tender.subject }}</h1>
             <p class="text-body-secondary mb-0">
-              {{ formatMoney(tender.budget, tender.currency) }} · cierra el {{ formatDateTime(tender.closing_date, tender.closing_time) }}
+              {{ formatMoney(tender.budget, tender.currency) }} · cierra el
+              {{ formatDateTime(tender.closing_date, tender.closing_time) }}
             </p>
           </div>
           <div class="flex-shrink-0">
@@ -88,7 +89,10 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
                 :aria-controls="`panel-${tab.key}`"
                 @click="activeTab = tab.key"
               >
-                <i class="bi me-1" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }} <span v-if="tab.key === 'documents'" class="badge rounded-pill text-bg-light border">{{ tender.documents.length }}</span>
+                <i class="bi me-1" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+                <span v-if="tab.key === 'documents'" class="badge rounded-pill text-bg-light border">{{
+                  tender.documents.length
+                }}</span>
               </button>
             </li>
           </ul>
@@ -144,7 +148,8 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
               </li>
             </ol>
             <p class="small text-body-secondary mt-3 mb-0">
-              Creada el {{ formatDateTime(tender.created_at) }} · última actualización {{ formatDateTime(tender.updated_at) }}
+              Creada el {{ formatDateTime(tender.created_at) }} · última actualización
+              {{ formatDateTime(tender.updated_at) }}
             </p>
           </div>
 

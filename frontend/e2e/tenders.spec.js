@@ -95,7 +95,9 @@ test.describe('Módulo de licitaciones', () => {
 
     await page.getByRole('button', { name: 'Agregar documento' }).click()
     const dialog = page.getByRole('dialog', { name: 'Agregar documento' })
-    await dialog.getByLabel('Archivo').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('png') })
+    await dialog
+      .getByLabel('Archivo')
+      .setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('png') })
 
     await expect(dialog.getByText('Solo se permiten archivos PDF o ZIP.')).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Agregar', exact: true })).toBeDisabled()

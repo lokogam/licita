@@ -74,7 +74,10 @@ async function save(payload) {
     </div>
 
     <template v-else>
-      <PageHeader :title="`Editar ${tender.consecutive}`" subtitle="Actualice la información y adjunte los documentos." />
+      <PageHeader
+        :title="`Editar ${tender.consecutive}`"
+        subtitle="Actualice la información y adjunte los documentos."
+      />
       <TenderForm
         :initial="tender"
         submit-label="Guardar cambios"

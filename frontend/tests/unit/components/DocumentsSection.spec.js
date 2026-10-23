@@ -5,7 +5,11 @@ import DocumentsSection from '@/components/tenders/DocumentsSection.vue'
 const existing = [
   { id: 1, title: 'Pliego', description: 'Principal', original_name: 'pliego.pdf', size: 1024, download_url: '/api/x' },
 ]
-const pendingDoc = { title: 'Anexo', description: 'Técnico', file: new File(['x'], 'anexo.zip', { type: 'application/zip' }) }
+const pendingDoc = {
+  title: 'Anexo',
+  description: 'Técnico',
+  file: new File(['x'], 'anexo.zip', { type: 'application/zip' }),
+}
 
 describe('DocumentsSection', () => {
   it('requires at least one document', () => {
@@ -26,7 +30,10 @@ describe('DocumentsSection', () => {
   it('opens the modal and appends the added document', async () => {
     const wrapper = mount(DocumentsSection, { props: { existing: [], modelValue: [] } })
 
-    await wrapper.findAll('button').find((b) => b.text().includes('Agregar documento')).trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Agregar documento'))
+      .trigger('click')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
 
     wrapper.findComponent({ name: 'DocumentModal' }).vm.$emit('add', pendingDoc)

@@ -42,7 +42,10 @@ export class TenderFormPage {
   async chooseActivity(term) {
     await this.activity.click()
     await this.activity.fill(term)
-    const option = this.page.getByRole('option').filter({ hasText: new RegExp(term, 'i') }).first()
+    const option = this.page
+      .getByRole('option')
+      .filter({ hasText: new RegExp(term, 'i') })
+      .first()
     await option.waitFor()
     await option.dispatchEvent('mousedown')
   }

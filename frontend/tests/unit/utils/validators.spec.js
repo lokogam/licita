@@ -139,8 +139,12 @@ describe('validateDocument', () => {
   const file = (name, type, size = 1024) => ({ name, type, size })
 
   it('accepts a complete PDF or ZIP document', () => {
-    expect(validateDocument({ title: 'Pliego', description: 'Principal', file: file('a.pdf', 'application/pdf') })).toEqual({})
-    expect(validateDocument({ title: 'Anexos', description: 'Zip', file: file('a.zip', 'application/x-zip-compressed') })).toEqual({})
+    expect(
+      validateDocument({ title: 'Pliego', description: 'Principal', file: file('a.pdf', 'application/pdf') }),
+    ).toEqual({})
+    expect(
+      validateDocument({ title: 'Anexos', description: 'Zip', file: file('a.zip', 'application/x-zip-compressed') }),
+    ).toEqual({})
   })
 
   it('requires title, description and file within limits', () => {
