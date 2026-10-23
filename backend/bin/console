@@ -69,7 +69,7 @@ switch ($command) {
         $dumpDb = $capsule->getConnection('dump');
 
         (new Migrator($dumpDb, $migrationsPath))->migrate();
-        $sql = (new SchemaDumper($dumpDb, ['activities', 'tenders', 'tender_documents', 'tender_sequences']))->dump();
+        $sql = (new SchemaDumper($dumpDb, ['activities', 'tenders', 'tender_documents', 'tender_sequences', 'users', 'refresh_tokens', 'login_attempts']))->dump();
         $db->statement("DROP DATABASE `{$scratch}`");
 
         $target = $argv[2] ?? $basePath . '/../bd/01_schema.sql';

@@ -18,7 +18,15 @@ final class MigratorTest extends TestCase
 {
     private const DATABASE = 'suplos_tenders_migrations_test';
 
-    private const TABLES = ['activities', 'tenders', 'tender_documents', 'tender_sequences'];
+    private const TABLES = [
+        'activities',
+        'tenders',
+        'tender_documents',
+        'tender_sequences',
+        'users',
+        'refresh_tokens',
+        'login_attempts',
+    ];
 
     private Connection $db;
 
@@ -47,7 +55,7 @@ final class MigratorTest extends TestCase
     {
         $ran = $this->migrator->migrate();
 
-        $this->assertCount(4, $ran);
+        $this->assertCount(5, $ran);
         foreach (self::TABLES as $table) {
             $this->assertTrue($this->db->getSchemaBuilder()->hasTable($table), "Missing table {$table}");
         }
@@ -57,12 +65,12 @@ final class MigratorTest extends TestCase
 
     public function test_it_reports_the_status_of_each_migration(): void
     {
-        $this->assertSame([false, false, false, false], array_values($this->migrator->status()));
+        $this->assertSame([false, false, false, false, false], array_values($this->migrator->status()));
 
         $this->migrator->migrate();
 
         $status = $this->migrator->status();
-        $this->assertSame([true, true, true, true], array_values($status));
+        $this->assertSame([true, true, true, true, true], array_values($status));
         $this->assertStringContainsString('create_tenders_table', array_keys($status)[1]);
     }
 
@@ -72,7 +80,7 @@ final class MigratorTest extends TestCase
 
         $rolledBack = $this->migrator->rollback();
 
-        $this->assertCount(4, $rolledBack);
+        $this->assertCount(5, $rolledBack);
         foreach (self::TABLES as $table) {
             $this->assertFalse($this->db->getSchemaBuilder()->hasTable($table));
         }
@@ -97,7 +105,22 @@ final class MigratorTest extends TestCase
         $ran = $this->migrator->migrate();
 
         $this->assertSame([], $ran, 'Legacy schema must be marked as migrated, not re-created.');
-        $this->assertSame([true, true, true, true], array_values($this->migrator->status()));
+        $this->assertSame([true, true, true, true, true], array_values($this->migrator->status()));
+    }
+
+    public function test_baseline_only_marks_migrations_whose_tables_exist(): void
+    {
+        $this->migrator->migrate();
+        // Simulate a v1.0 database: created from the bd scripts before the auth tables existed.
+        $this->db->getSchemaBuilder()->drop('migrations');
+        foreach (['login_attempts', 'refresh_tokens', 'users'] as $table) {
+            $this->db->getSchemaBuilder()->drop($table);
+        }
+
+        $ran = $this->migrator->migrate();
+
+        $this->assertSame(['2026_10_24_000005_create_auth_tables'], $ran);
+        $this->assertTrue($this->db->getSchemaBuilder()->hasTable('users'));
     }
 
     public function test_the_bd_schema_script_matches_the_migrations(): void
