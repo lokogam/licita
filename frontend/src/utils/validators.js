@@ -134,7 +134,8 @@ export function validateTender(form) {
   set('description', textError(form.description, LABELS.description, LIMITS.description))
 
   if (isEmpty(form.currency)) set('currency', 'El campo moneda es obligatorio.')
-  else if (!CURRENCIES.includes(form.currency)) set('currency', `El campo moneda debe ser uno de: ${CURRENCIES.join(', ')}.`)
+  else if (!CURRENCIES.includes(form.currency))
+    set('currency', `El campo moneda debe ser uno de: ${CURRENCIES.join(', ')}.`)
 
   set('budget', budgetError(form.budget))
 

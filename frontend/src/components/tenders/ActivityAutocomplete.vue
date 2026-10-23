@@ -170,7 +170,9 @@ function onBlur() {
         <span class="autocomplete-code">{{ activity.product_code }}</span>
         <span class="autocomplete-text">
           <span class="d-block text-truncate">{{ activity.product }}</span>
-          <small v-if="activity.class_name" class="d-block text-body-secondary text-truncate">{{ activity.class_name }}</small>
+          <small v-if="activity.class_name" class="d-block text-body-secondary text-truncate">{{
+            activity.class_name
+          }}</small>
         </span>
       </li>
     </ul>
