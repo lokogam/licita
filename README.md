@@ -374,6 +374,6 @@ MySQL se aloja fuera de Render (por ejemplo, Aiven MySQL), porque Render no ofre
    ```
 2. En Render: **New → Blueprint** y seleccione el repositorio.
 3. Complete las variables `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` y `DB_SSL_CA` (contenido del certificado CA en PEM). `APP_KEY` se genera automáticamente.
-4. Cree los usuarios desde la consola del servicio (Render → Shell): `php bin/console user:create "Nombre" correo@dominio.com admin`. Los usuarios de prueba (`users:demo`) están bloqueados en producción, porque sus contraseñas son públicas.
+4. Cree los usuarios con `php bin/console user:create "Nombre" correo@dominio.com admin`, desde la consola del servicio o desde cualquier equipo con las variables `DB_*` de la base de producción. Los usuarios de prueba (`users:demo`) están bloqueados en producción, porque sus contraseñas son públicas.
 
 > En el plan gratuito el servicio se suspende tras 15 minutos sin tráfico (la primera visita tarda unos segundos) y el disco es efímero: los documentos subidos no persisten entre despliegues. Para producción se agrega un disco persistente montado en `/var/www/html/storage/app`.
