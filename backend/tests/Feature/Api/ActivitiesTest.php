@@ -55,6 +55,16 @@ final class ActivitiesTest extends DatabaseTestCase
         $this->assertSame([], $body['data']);
     }
 
+    public function test_without_search_it_returns_the_first_activities_alphabetically(): void
+    {
+        $body = $this->json($this->call('GET', '/api/activities?limit=2'));
+
+        $this->assertSame(
+            ['Bolígrafos', 'Computadores de escritorio'],
+            array_column($body['data'], 'product'),
+        );
+    }
+
     public function test_it_shows_a_single_activity(): void
     {
         $id = $this->json($this->call('GET', '/api/activities?search=Bolígrafos'))['data'][0]['id'];

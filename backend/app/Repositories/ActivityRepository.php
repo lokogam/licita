@@ -20,6 +20,7 @@ final class ActivityRepository
 
     /**
      * Autocomplete search: by product code prefix when numeric, by product name otherwise.
+     * An empty term returns the first activities alphabetically (initial suggestions).
      *
      * @return Collection<int, Activity>
      */
@@ -27,14 +28,20 @@ final class ActivityRepository
     {
         $term = trim($term);
 
+        /** @var Builder<Activity> $query */
+        $query = Activity::query()->select(self::COLUMNS);
+
+        if ($term === '') {
+            $query->orderBy('product')->limit($limit);
+
+            return $query->get();
+        }
+
         if (mb_strlen($term) < self::MIN_SEARCH_LENGTH) {
             return new Collection();
         }
 
         $escaped = addcslashes($term, '%_\\');
-
-        /** @var Builder<Activity> $query */
-        $query = Activity::query()->select(self::COLUMNS);
 
         if (ctype_digit($term)) {
             $query->where('product_code', 'like', $escaped . '%')->orderBy('product_code');
