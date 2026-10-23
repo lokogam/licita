@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Core\Support\DatabaseSsl;
 use App\Core\Support\Env;
 
 return [
@@ -15,4 +16,6 @@ return [
     'collation' => 'utf8mb4_unicode_ci',
     'prefix' => '',
     'strict' => true,
+    // Managed MySQL (Aiven, etc.): CA certificate in PEM format enables TLS.
+    'options' => DatabaseSsl::options(Env::get('DB_SSL_CA'), sys_get_temp_dir()),
 ];
