@@ -57,6 +57,26 @@ final class OpenApiDocumentationTest extends TestCase
         }
     }
 
+    public function test_it_sends_cache_validators(): void
+    {
+        $response = $this->kernel->handle(Request::create('GET', '/api/openapi.json'));
+
+        $this->assertMatchesRegularExpression('/^"[a-f0-9]{40}"$/', $response->headers()['ETag']);
+        $this->assertSame('public, max-age=3600', $response->headers()['Cache-Control']);
+    }
+
+    public function test_it_answers_304_when_the_document_did_not_change(): void
+    {
+        $etag = $this->kernel->handle(Request::create('GET', '/api/openapi.json'))->headers()['ETag'];
+
+        $response = $this->kernel->handle(
+            Request::create('GET', '/api/openapi.json', headers: ['If-None-Match' => $etag]),
+        );
+
+        $this->assertSame(304, $response->status());
+        $this->assertSame('', $response->content());
+    }
+
     public function test_it_serves_the_swagger_ui(): void
     {
         $response = $this->kernel->handle(Request::create('GET', '/api/docs'));
