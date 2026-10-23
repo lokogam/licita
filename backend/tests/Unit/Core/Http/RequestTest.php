@@ -29,6 +29,27 @@ final class RequestTest extends TestCase
         $this->assertSame('x', $request->input('missing', 'x'));
     }
 
+    public function test_it_decodes_json_raw_bodies(): void
+    {
+        $request = Request::create(
+            'POST',
+            '/api/tenders',
+            headers: ['Content-Type' => 'application/json; charset=utf-8'],
+            rawBody: '{"subject":"Compra","budget":10.5}',
+        );
+
+        $this->assertSame('Compra', $request->input('subject'));
+        $this->assertSame(10.5, $request->input('budget'));
+        $this->assertFalse($request->hasMalformedBody());
+    }
+
+    public function test_it_flags_invalid_json_bodies(): void
+    {
+        $request = Request::create('POST', '/', headers: ['Content-Type' => 'application/json'], rawBody: '{bad');
+
+        $this->assertTrue($request->hasMalformedBody());
+    }
+
     public function test_it_allows_method_spoofing_on_post_requests(): void
     {
         $request = Request::create('POST', '/api/tenders/1', body: ['_method' => 'put']);

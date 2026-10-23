@@ -11,4 +11,5 @@ return [
     'timezone' => Env::get('APP_TIMEZONE', 'America/Bogota'),
     'cors_origin' => Env::get('CORS_ALLOWED_ORIGIN', '*'),
     'storage_path' => dirname(__DIR__) . '/storage',
+    'documents_path' => Env::get('DOCUMENTS_PATH', dirname(__DIR__) . '/storage/app/documents'),
 ];
