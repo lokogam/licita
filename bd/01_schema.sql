@@ -50,10 +50,15 @@ CREATE TABLE tenders (
     status        VARCHAR(20)   NOT NULL,
     created_at    DATETIME      NOT NULL,
     updated_at    DATETIME      NOT NULL,
+    -- Schedule as single instants, so status filters (scheduled/open/closed) use indexes.
+    starts_at     DATETIME      AS (TIMESTAMP(start_date, start_time)) STORED,
+    closes_at     DATETIME      AS (TIMESTAMP(closing_date, closing_time)) STORED,
     PRIMARY KEY (id),
     UNIQUE KEY uq_tenders_consecutive (consecutive),
     KEY idx_tenders_subject (subject),
     KEY idx_tenders_created_at (created_at),
+    KEY idx_tenders_starts_at (starts_at),
+    KEY idx_tenders_closes_at (closes_at),
     CONSTRAINT fk_tenders_activity FOREIGN KEY (activity_id) REFERENCES activities (id),
     CONSTRAINT chk_tenders_currency CHECK (currency IN ('COP', 'USD', 'EUR')),
     CONSTRAINT chk_tenders_budget CHECK (budget > 0)

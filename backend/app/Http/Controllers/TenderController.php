@@ -49,6 +49,11 @@ final class TenderController
                 description: 'Descripción contiene',
                 schema: new OA\Schema(type: 'string'),
             ),
+            new OA\QueryParameter(
+                name: 'status',
+                description: 'Estado calculado según el cronograma',
+                schema: new OA\Schema(type: 'string', enum: ['scheduled', 'open', 'closed']),
+            ),
             new OA\QueryParameter(name: 'page', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
             new OA\QueryParameter(
                 name: 'per_page',
@@ -97,6 +102,11 @@ final class TenderController
                 name: 'description',
                 description: 'Descripción contiene',
                 schema: new OA\Schema(type: 'string'),
+            ),
+            new OA\QueryParameter(
+                name: 'status',
+                description: 'Estado calculado según el cronograma',
+                schema: new OA\Schema(type: 'string', enum: ['scheduled', 'open', 'closed']),
             ),
         ],
         responses: [

@@ -79,6 +79,23 @@ describe('TenderListView', () => {
     expect(router.currentRoute.value.query.subject).toBe('portátiles')
   })
 
+  it('filters by status immediately', async () => {
+    listTenders.mockResolvedValue(page([row]))
+    const { wrapper, router } = await mountView()
+
+    await wrapper.get('#filter-status').setValue('open')
+    await flushPromises()
+
+    expect(listTenders).toHaveBeenLastCalledWith({ page: 1, per_page: 10, status: 'open' })
+    expect(router.currentRoute.value.query.status).toBe('open')
+    expect(wrapper.findAll('#filter-status option').map((o) => o.text())).toEqual([
+      'Todos',
+      'Programada',
+      'Abierta',
+      'Cerrada',
+    ])
+  })
+
   it('changes page with the pagination bar', async () => {
     listTenders.mockResolvedValue(page([row], { total: 25, last_page: 3, to: 10 }))
     const { wrapper } = await mountView()
