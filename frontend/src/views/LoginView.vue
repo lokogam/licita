@@ -15,9 +15,9 @@ const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
 /** Local demo accounts; production builds drop this list entirely. */
 const DEMO_USERS = showDemoUsers
   ? [
-      { role: 'Administrador', icon: 'bi-shield-lock', email: 'admin@suplos.test', password: 'Admin-Demo-2026' },
-      { role: 'Editor', icon: 'bi-pencil', email: 'editor@suplos.test', password: 'Editor-Demo-2026' },
-      { role: 'Lector', icon: 'bi-eye', email: 'lector@suplos.test', password: 'Lector-Demo-2026' },
+      { role: 'Administrador', icon: 'bi-shield-lock', email: 'admin@licita.test', password: 'Admin-Demo-2026' },
+      { role: 'Editor', icon: 'bi-pencil', email: 'editor@licita.test', password: 'Editor-Demo-2026' },
+      { role: 'Lector', icon: 'bi-eye', email: 'lector@licita.test', password: 'Lector-Demo-2026' },
     ]
   : []
 
@@ -88,7 +88,7 @@ async function submit() {
       <div class="login-aside-inner">
         <div class="d-flex align-items-center gap-2 mb-5">
           <span class="brand-mark"></span>
-          <span class="brand-name text-white">suplos</span>
+          <span class="brand-name text-white">licita</span>
           <span class="brand-divider"></span>
           <span class="brand-module">Licitaciones</span>
         </div>
@@ -105,7 +105,7 @@ async function submit() {
       <div class="login-panel">
         <div class="d-flex d-lg-none align-items-center gap-2 mb-4 login-brand-compact">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name">suplos</span>
+          <span class="brand-name">licita</span>
           <span class="text-body-secondary">Licitaciones</span>
         </div>
 

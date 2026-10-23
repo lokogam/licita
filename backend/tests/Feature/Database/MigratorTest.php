@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class MigratorTest extends TestCase
 {
-    private const DATABASE = 'suplos_tenders_migrations_test';
+    private const DATABASE = 'licita_migrations_test';
 
     private const TABLES = [
         'activities',

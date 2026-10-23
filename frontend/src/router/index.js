@@ -66,7 +66,7 @@ router.beforeEach(async (to) => {
 })
 
 router.afterEach((to) => {
-  document.title = `${to.meta.title ?? 'Licitaciones'} | Suplos`
+  document.title = `${to.meta.title ?? 'Licitaciones'} | Licita`
 })
 
 onSessionExpired(() => {

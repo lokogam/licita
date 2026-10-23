@@ -17,7 +17,7 @@ vi.mock('@/composables/useAuth', () => ({
 const admin = {
   id: 1,
   name: 'Admin Demo',
-  email: 'admin@suplos.test',
+  email: 'admin@licita.test',
   role: { value: 'admin', label: 'Administrador' },
   abilities: [],
   created_at: '2026-10-20 08:00:00',
@@ -25,7 +25,7 @@ const admin = {
 const viewer = {
   id: 3,
   name: 'Lector Demo',
-  email: 'lector@suplos.test',
+  email: 'lector@licita.test',
   role: { value: 'viewer', label: 'Lector' },
   abilities: [],
   created_at: '2026-10-21 09:30:00',
@@ -60,7 +60,7 @@ describe('UsersView', () => {
     expect(wrapper.findAll('th').map((th) => th.text())).toEqual(['Nombre', 'Correo', 'Rol', 'Creado', 'Acciones'])
     const rows = wrapper.findAll('tbody tr')
     expect(rows).toHaveLength(2)
-    expect(rows[1].text()).toContain('lector@suplos.test')
+    expect(rows[1].text()).toContain('lector@licita.test')
     expect(rows[1].text()).toContain('Lector')
     expect(rows[1].text()).toContain('21/10/2026')
     expect(rows[0].text()).toContain('Usted')
@@ -72,7 +72,7 @@ describe('UsersView', () => {
       ...viewer,
       id: 9,
       name: 'Nuevo Editor',
-      email: 'nuevo@suplos.test',
+      email: 'nuevo@licita.test',
       role: { value: 'editor', label: 'Editor' },
     }
     createUser.mockResolvedValue(created)
@@ -83,7 +83,7 @@ describe('UsersView', () => {
     expect(save.attributes('disabled')).toBeDefined()
 
     await wrapper.get('#user-name').setValue('Nuevo Editor')
-    await wrapper.get('#user-email').setValue('nuevo@suplos.test')
+    await wrapper.get('#user-email').setValue('nuevo@licita.test')
     await wrapper.get('#user-role').setValue('editor')
     await wrapper.get('#user-password').setValue('corta')
     await wrapper.get('#user-password').trigger('blur')
@@ -95,12 +95,12 @@ describe('UsersView', () => {
 
     expect(createUser).toHaveBeenCalledWith({
       name: 'Nuevo Editor',
-      email: 'nuevo@suplos.test',
+      email: 'nuevo@licita.test',
       role: 'editor',
       password: 'Clave-Segura-2026',
     })
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('nuevo@suplos.test')
+    expect(wrapper.text()).toContain('nuevo@licita.test')
     wrapper.unmount()
   })
 
@@ -114,7 +114,7 @@ describe('UsersView', () => {
 
     await button(wrapper, 'Nuevo usuario').trigger('click')
     await wrapper.get('#user-name').setValue('Duplicado')
-    await wrapper.get('#user-email').setValue('lector@suplos.test')
+    await wrapper.get('#user-email').setValue('lector@licita.test')
     await wrapper.get('#user-role').setValue('viewer')
     await wrapper.get('#user-password').setValue('Clave-Segura-2026')
     await wrapper.get('#user-form').trigger('submit')
@@ -128,7 +128,7 @@ describe('UsersView', () => {
     updateUser.mockResolvedValue({ ...viewer, role: { value: 'editor', label: 'Editor' } })
     const wrapper = await mountView()
 
-    await wrapper.get('button[aria-label="Editar lector@suplos.test"]').trigger('click')
+    await wrapper.get('button[aria-label="Editar lector@licita.test"]').trigger('click')
     expect(wrapper.get('#user-name').element.value).toBe('Lector Demo')
     expect(wrapper.text()).toContain('Dejar en blanco para conservar la actual')
 
@@ -136,17 +136,17 @@ describe('UsersView', () => {
     await wrapper.get('#user-form').trigger('submit')
     await flushPromises()
 
-    expect(updateUser).toHaveBeenCalledWith(3, { name: 'Lector Demo', email: 'lector@suplos.test', role: 'editor' })
+    expect(updateUser).toHaveBeenCalledWith(3, { name: 'Lector Demo', email: 'lector@licita.test', role: 'editor' })
     wrapper.unmount()
   })
 
   it('does not allow deleting your own user', async () => {
     const wrapper = await mountView()
 
-    const own = wrapper.get('button[aria-label="Eliminar admin@suplos.test"]')
+    const own = wrapper.get('button[aria-label="Eliminar admin@licita.test"]')
     expect(own.attributes('disabled')).toBeDefined()
     expect(own.attributes('title')).toBe('No puede eliminar su propio usuario.')
-    expect(wrapper.get('button[aria-label="Eliminar lector@suplos.test"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button[aria-label="Eliminar lector@licita.test"]').attributes('disabled')).toBeUndefined()
     wrapper.unmount()
   })
 
@@ -154,13 +154,13 @@ describe('UsersView', () => {
     deleteUser.mockResolvedValue()
     const wrapper = await mountView()
 
-    await wrapper.get('button[aria-label="Eliminar lector@suplos.test"]').trigger('click')
+    await wrapper.get('button[aria-label="Eliminar lector@licita.test"]').trigger('click')
     expect(wrapper.get('[role="dialog"]').text()).toContain('Lector Demo')
     await wrapper.get('[role="dialog"] .btn-danger').trigger('click')
     await flushPromises()
 
     expect(deleteUser).toHaveBeenCalledWith(3)
-    expect(wrapper.text()).not.toContain('lector@suplos.test')
+    expect(wrapper.text()).not.toContain('lector@licita.test')
     wrapper.unmount()
   })
 
@@ -172,7 +172,7 @@ describe('UsersView', () => {
     })
     const wrapper = await mountView()
 
-    await wrapper.get('button[aria-label="Eliminar lector@suplos.test"]').trigger('click')
+    await wrapper.get('button[aria-label="Eliminar lector@licita.test"]').trigger('click')
     await wrapper.get('[role="dialog"] .btn-danger').trigger('click')
     await flushPromises()
 

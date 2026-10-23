@@ -179,10 +179,10 @@ describe('validateDocument', () => {
 
 describe('isValidEmail', () => {
   it('accepts addresses with a domain and rejects malformed ones', () => {
-    expect(isValidEmail('admin@suplos.test')).toBe(true)
-    expect(isValidEmail(' admin@suplos.test ')).toBe(true)
-    expect(isValidEmail('admin@suplos')).toBe(false)
-    expect(isValidEmail('admin suplos@x.co')).toBe(false)
+    expect(isValidEmail('admin@licita.test')).toBe(true)
+    expect(isValidEmail(' admin@licita.test ')).toBe(true)
+    expect(isValidEmail('admin@licita')).toBe(false)
+    expect(isValidEmail('admin licita@x.co')).toBe(false)
     expect(isValidEmail('')).toBe(false)
     expect(isValidEmail(null)).toBe(false)
   })
@@ -197,12 +197,12 @@ describe('validateLogin', () => {
     expect(validateLogin({ email: 'x', password: 'y' })).toEqual({
       email: 'El campo correo debe ser un correo electrónico válido.',
     })
-    expect(validateLogin({ email: 'admin@suplos.test', password: 'y' })).toEqual({})
+    expect(validateLogin({ email: 'admin@licita.test', password: 'y' })).toEqual({})
   })
 })
 
 describe('validateUser', () => {
-  const valid = () => ({ name: 'Laura', email: 'laura@suplos.test', role: 'editor', password: 'Clave-Segura-1' })
+  const valid = () => ({ name: 'Laura', email: 'laura@licita.test', role: 'editor', password: 'Clave-Segura-1' })
 
   it('accepts a complete user', () => {
     expect(validateUser(valid())).toEqual({})

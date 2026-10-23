@@ -10,7 +10,7 @@ vi.mock('@/api/auth', () => ({ login: vi.fn(), refreshSession: vi.fn(), logout: 
 const editor = {
   id: 2,
   name: 'Editor Demo',
-  email: 'editor@suplos.test',
+  email: 'editor@licita.test',
   role: { value: 'editor', label: 'Editor' },
   abilities: ['tenders.view', 'tenders.create', 'tenders.update', 'documents.manage'],
   created_at: '2026-10-20 08:00:00',
@@ -34,9 +34,9 @@ describe('useAuth', () => {
     authApi.login.mockResolvedValue(session())
     const auth = useAuth()
 
-    const user = await auth.login(' editor@suplos.test ', 'Editor-Demo-2026')
+    const user = await auth.login(' editor@licita.test ', 'Editor-Demo-2026')
 
-    expect(authApi.login).toHaveBeenCalledWith('editor@suplos.test', 'Editor-Demo-2026')
+    expect(authApi.login).toHaveBeenCalledWith('editor@licita.test', 'Editor-Demo-2026')
     expect(user.name).toBe('Editor Demo')
     expect(auth.isAuthenticated.value).toBe(true)
     expect(auth.state.accessToken).toBe('token-1')
@@ -57,7 +57,7 @@ describe('useAuth', () => {
     expect(auth.can('tenders.view')).toBe(false)
 
     authApi.login.mockResolvedValue(session())
-    await auth.login('editor@suplos.test', 'x')
+    await auth.login('editor@licita.test', 'x')
 
     expect(auth.can('tenders.create')).toBe(true)
     expect(auth.can('documents.manage')).toBe(true)
@@ -91,7 +91,7 @@ describe('useAuth', () => {
     expect(await auth.restoreSession()).toBe(true)
 
     expect(authApi.refreshSession).toHaveBeenCalledTimes(1)
-    expect(auth.user.value.email).toBe('editor@suplos.test')
+    expect(auth.user.value.email).toBe('editor@licita.test')
   })
 
   it('ignores a 401 while restoring (no cookie means no session)', async () => {
@@ -106,7 +106,7 @@ describe('useAuth', () => {
     authApi.login.mockResolvedValue(session())
     authApi.logout.mockRejectedValue({ status: 0, message: 'offline', errors: {} })
     const auth = useAuth()
-    await auth.login('editor@suplos.test', 'x')
+    await auth.login('editor@licita.test', 'x')
 
     await auth.logout()
 
@@ -122,7 +122,7 @@ describe('useAuth', () => {
     const listener = vi.fn()
     onSessionExpired(listener)
     const auth = useAuth()
-    await auth.login('editor@suplos.test', 'x')
+    await auth.login('editor@licita.test', 'x')
 
     const originalAdapter = http.defaults.adapter
     http.defaults.adapter = async (config) => {

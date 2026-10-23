@@ -7,7 +7,7 @@ test.describe('Inicio de sesión', () => {
     await page.goto('/login')
 
     // Unknown account: does not count failed attempts against a real user.
-    await page.getByLabel('Correo electrónico').fill(`nadie-${Date.now()}@suplos.test`)
+    await page.getByLabel('Correo electrónico').fill(`nadie-${Date.now()}@licita.test`)
     await page.getByLabel('Contraseña', { exact: true }).fill('Clave-Incorrecta-1')
     await page.getByRole('button', { name: 'Ingresar' }).click()
 
@@ -54,7 +54,7 @@ test.describe('Inicio de sesión', () => {
 test.describe('Cierre de sesión', () => {
   test('cierra la sesión y vuelve a pedir credenciales', async ({ page }) => {
     await page.goto('/licitaciones')
-    await expect(page.getByRole('heading', { name: 'Licitaciones' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Licitaciones' })).toBeVisible()
 
     await page.getByRole('button', { name: /^Cuenta de / }).click()
     await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click()

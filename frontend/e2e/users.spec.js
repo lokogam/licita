@@ -2,7 +2,7 @@ import { request as playwrightRequest } from '@playwright/test'
 import { ADMIN, apiLogin, expect, test } from './fixtures'
 
 /** Unique per run so repeated runs (and other environments) do not collide. */
-const email = `e2e-${Date.now()}@suplos.test`
+const email = `e2e-${Date.now()}@licita.test`
 
 /**
  * Removes the test user through the API if a failed run left it behind.

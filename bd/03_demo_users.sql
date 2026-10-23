@@ -1,6 +1,6 @@
 -- Demo users (one per role). Passwords are listed in the README.
 INSERT IGNORE INTO `users`
   (`name`, `email`, `password_hash`, `role`, `created_at`, `updated_at`) VALUES
-  ('Administrador Demo', 'admin@suplos.test', '$argon2id$v=19$m=65536,t=4,p=1$QWZ3VVphcFZBRHpvbHRJeg$4Rq31LWao449Q01vcC2jJ0KQLKDCsY1WAIiu2iUNTxk', 'admin', NOW(), NOW()),
-  ('Editor Demo', 'editor@suplos.test', '$argon2id$v=19$m=65536,t=4,p=1$Z3RrL1VWdGVRMTIwSmJiSw$+Y/yaJ3sXY8yzA2Pcqw12mRXfXxRTG0IYvfTFtBl95s', 'editor', NOW(), NOW()),
-  ('Lector Demo', 'lector@suplos.test', '$argon2id$v=19$m=65536,t=4,p=1$M2Z1ZnNiOWZIdy9jRy45bA$7l9DKPtdTXlYhogdYPdMev7+NUEFe6YsfDjJASwwjSE', 'viewer', NOW(), NOW());
+  ('Administrador Demo', 'admin@licita.test', '$argon2id$v=19$m=65536,t=4,p=1$SmE2Z2t1U2dIbnZNNmRJWg$sNytBBRm/PzCBMjO2mWLULoivAKwSVMUQ1JS284d/Pk', 'admin', NOW(), NOW()),
+  ('Editor Demo', 'editor@licita.test', '$argon2id$v=19$m=65536,t=4,p=1$NXIwYTRPakVNQTk1THVNdQ$LNGOBeppNiSgFkpnBeSKUmEMpvNALu10H1T1nCS7/jQ', 'editor', NOW(), NOW()),
+  ('Lector Demo', 'lector@licita.test', '$argon2id$v=19$m=65536,t=4,p=1$T3F5S3ViUFBZTXFVcEtsRA$qicEW8zg4Toer0pPA+pmar9pc1Y8nvuvv7nkAayGE7k', 'viewer', NOW(), NOW());

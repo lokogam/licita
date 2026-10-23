@@ -38,7 +38,7 @@ final class AuthController
             content: new OA\JsonContent(
                 required: ['email', 'password'],
                 properties: [
-                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@suplos.test'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@licita.test'),
                     new OA\Property(property: 'password', type: 'string', format: 'password'),
                 ],
             ),

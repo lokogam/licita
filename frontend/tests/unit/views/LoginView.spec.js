@@ -49,16 +49,16 @@ describe('LoginView', () => {
   it('logs in and goes to the requested page', async () => {
     const { wrapper, router } = await mountView({ redirect: '/licitaciones/7' })
 
-    await fill(wrapper, 'admin@suplos.test', 'Admin-Demo-2026')
+    await fill(wrapper, 'admin@licita.test', 'Admin-Demo-2026')
 
-    expect(auth.login).toHaveBeenCalledWith('admin@suplos.test', 'Admin-Demo-2026')
+    expect(auth.login).toHaveBeenCalledWith('admin@licita.test', 'Admin-Demo-2026')
     expect(router.currentRoute.value.fullPath).toBe('/licitaciones/7')
   })
 
   it('ignores external redirects and goes to the list', async () => {
     const { wrapper, router } = await mountView({ redirect: 'https://evil.test' })
 
-    await fill(wrapper, 'admin@suplos.test', 'Admin-Demo-2026')
+    await fill(wrapper, 'admin@licita.test', 'Admin-Demo-2026')
 
     expect(router.currentRoute.value.name).toBe('tenders.index')
   })
@@ -67,7 +67,7 @@ describe('LoginView', () => {
     auth.login.mockRejectedValue({ status: 401, message: 'Correo o contraseña incorrectos.', errors: {} })
     const { wrapper, router } = await mountView()
 
-    await fill(wrapper, 'admin@suplos.test', 'otra-clave')
+    await fill(wrapper, 'admin@licita.test', 'otra-clave')
 
     const alert = wrapper.get('[data-test="login-alert"]')
     expect(alert.text()).toBe('Correo o contraseña incorrectos.')
@@ -84,7 +84,7 @@ describe('LoginView', () => {
     })
     const { wrapper } = await mountView()
 
-    await fill(wrapper, 'admin@suplos.test', 'otra-clave')
+    await fill(wrapper, 'admin@licita.test', 'otra-clave')
 
     const alert = wrapper.get('[data-test="login-alert"]')
     expect(alert.text()).toContain('Demasiados intentos fallidos')
@@ -99,7 +99,7 @@ describe('LoginView', () => {
     })
     const { wrapper } = await mountView()
 
-    await fill(wrapper, 'admin@suplos.test', 'x')
+    await fill(wrapper, 'admin@licita.test', 'x')
 
     expect(wrapper.get('#login-email-error').text()).toBe('El campo correo no debe superar 150 caracteres.')
   })
@@ -119,7 +119,7 @@ describe('LoginView', () => {
     auth.login.mockReturnValue(new Promise((r) => (resolve = r)))
     const { wrapper } = await mountView()
 
-    await wrapper.get('#login-email').setValue('admin@suplos.test')
+    await wrapper.get('#login-email').setValue('admin@licita.test')
     await wrapper.get('#login-password').setValue('Admin-Demo-2026')
     await wrapper.get('form').trigger('submit')
 
@@ -134,7 +134,7 @@ describe('LoginView', () => {
     const { wrapper } = await mountView()
 
     expect(wrapper.find('[data-test="demo-users"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('admin@suplos.test')
+    expect(wrapper.text()).not.toContain('admin@licita.test')
   })
 
   it('lists the demo users when enabled and fills the form with one', async () => {
@@ -144,7 +144,7 @@ describe('LoginView', () => {
     await wrapper.get('.demo-users-toggle').trigger('click')
     await wrapper.get('button[aria-label="Usar cuenta Lector"]').trigger('click')
 
-    expect(wrapper.get('#login-email').element.value).toBe('lector@suplos.test')
+    expect(wrapper.get('#login-email').element.value).toBe('lector@licita.test')
     expect(wrapper.get('#login-password').element.value).toBe('Lector-Demo-2026')
   })
 })

@@ -1,5 +1,5 @@
 {
-    "name": "duvangamboa/suplos-tenders-api",
+    "name": "duvangamboa/licita-api",
     "description": "Tenders module REST API built with plain PHP (MVC) and standalone Eloquent.",
     "type": "project",
     "license": "MIT",

@@ -184,7 +184,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'name', type: 'string', example: 'Administrador Demo'),
-        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@suplos.test'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@licita.test'),
         new OA\Property(
             property: 'role',
             properties: [

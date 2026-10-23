@@ -6,7 +6,7 @@ test.describe('Rol lector', () => {
   test('solo consulta: no ve acciones de creación, edición ni usuarios', async ({ page }) => {
     await page.goto('/licitaciones')
 
-    await expect(page.getByRole('heading', { name: 'Licitaciones' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Licitaciones' })).toBeVisible()
     await expect(page.getByRole('button', { name: /^Cuenta de / })).toContainText('Lector')
     await expect(page.getByRole('button', { name: 'Exportar Excel' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Nueva licitación' })).toHaveCount(0)

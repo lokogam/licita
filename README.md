@@ -38,8 +38,8 @@ Módulo para **crear, editar (con carga de documentos), listar, filtrar, consult
 **Requisitos:** Docker 24+ con Docker Compose v2.
 
 ```bash
-git clone https://github.com/lokogam/suplos-licitaciones.git
-cd suplos-licitaciones
+git clone https://github.com/lokogam/licita.git
+cd licita
 cp .env.example .env        # opcional: puertos y credenciales
 docker compose up -d --build
 ```
@@ -49,7 +49,7 @@ docker compose up -d --build
 | Aplicación | http://localhost:8080 |
 | Documentación de la API (Swagger) | http://localhost:8080/api/docs |
 | Especificación OpenAPI | http://localhost:8080/api/openapi.json |
-| MySQL (desde el host) | `localhost:3307` · usuario `suplos` / `secret` |
+| MySQL (desde el host) | `localhost:3307` · usuario `licita` / `secret` |
 
 La primera vez MySQL ejecuta automáticamente los scripts de `bd/`: crea las tablas y carga las **49.022 actividades** del clasificador UNSPSC y crea los usuarios de prueba. Tarda unos segundos; `docker compose up --wait` espera a que todo esté sano.
 
@@ -57,9 +57,9 @@ La primera vez MySQL ejecuta automáticamente los scripts de `bd/`: crea las tab
 
 | Rol | Correo | Contraseña |
 |---|---|---|
-| Administrador | `admin@suplos.test` | `Admin-Demo-2026` |
-| Editor | `editor@suplos.test` | `Editor-Demo-2026` |
-| Lector | `lector@suplos.test` | `Lector-Demo-2026` |
+| Administrador | `admin@licita.test` | `Admin-Demo-2026` |
+| Editor | `editor@licita.test` | `Editor-Demo-2026` |
+| Lector | `lector@licita.test` | `Lector-Demo-2026` |
 
 En el entorno local, la pantalla de inicio de sesión los muestra para elegirlos con un clic. La demo pública usa otras cuentas con contraseñas distintas, que no se publican en el repositorio.
 
@@ -117,7 +117,7 @@ El proyecto se construyó con **TDD**: en el historial de Git cada funcionalidad
 | Frontend | `cd frontend && npm test` | Validadores, formateadores, composables, componentes y vistas (Vitest + Vue Test Utils) |
 | End-to-end | `cd frontend && npx playwright install chromium && npm run test:e2e` | Flujo completo en el navegador contra el stack de Docker (escritorio y móvil) |
 
-Las pruebas de backend usan una base de datos aparte (`suplos_tenders_test`), creada automáticamente a partir de `bd/01_schema.sql`. Nunca tocan los datos de la aplicación.
+Las pruebas de backend usan una base de datos aparte (`licita_test`), creada automáticamente a partir de `bd/01_schema.sql`. Nunca tocan los datos de la aplicación.
 
 **Totales actuales:** 141 pruebas de backend, 67 de frontend y 5 escenarios E2E. Todas corren en GitHub Actions (`.github/workflows/ci.yml`).
 
@@ -134,10 +134,10 @@ Las pruebas de backend usan una base de datos aparte (`suplos_tenders_test`), cr
 Instalación manual (sin Docker):
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE suplos_tenders CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-mysql -u root -p suplos_tenders < bd/01_schema.sql
-mysql -u root -p suplos_tenders < bd/02_activities.sql
-mysql -u root -p suplos_tenders < bd/03_demo_users.sql   # opcional: usuarios de prueba
+mysql -u root -p -e "CREATE DATABASE licita CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql -u root -p licita < bd/01_schema.sql
+mysql -u root -p licita < bd/02_activities.sql
+mysql -u root -p licita < bd/03_demo_users.sql   # opcional: usuarios de prueba
 ```
 
 ### Migraciones versionadas
@@ -253,7 +253,7 @@ frontend/src/
 ├── views/            Inicio de sesión, listado, creación, edición, detalle, usuarios y 404
 ├── router/           Rutas con guardas de sesión y de permisos
 ├── utils/            validators.js (mismas reglas y mensajes que la API), formatters.js
-└── assets/scss/      Tema de Bootstrap con la identidad de Suplos
+└── assets/scss/      Tema de Bootstrap con la identidad de Licita
 ```
 
 ---
@@ -362,8 +362,8 @@ El archivo `render.yaml` (Blueprint) crea dos servicios:
 
 | Servicio | Tipo | Detalle |
 |---|---|---|
-| `suplos-licitaciones-api` | Web Service (Docker) | `backend/Dockerfile`, salud en `/api/health` |
-| `suplos-licitaciones` | Static Site | Build de Vite; `/api/*` se reenvía a la API (mismo origen) |
+| `licita-api` | Web Service (Docker) | `backend/Dockerfile`, salud en `/api/health` |
+| `licita` | Static Site | Build de Vite; `/api/*` se reenvía a la API (mismo origen) |
 
 MySQL se aloja fuera de Render (por ejemplo, Aiven MySQL), porque Render no ofrece MySQL administrado.
 

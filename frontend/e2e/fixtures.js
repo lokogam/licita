@@ -6,12 +6,12 @@ import { test as base, expect } from '@playwright/test'
 
 /** Defaults are the local demo accounts; other environments pass their own through env vars. */
 export const ADMIN = Object.freeze({
-  email: process.env.E2E_EMAIL ?? 'admin@suplos.test',
+  email: process.env.E2E_EMAIL ?? 'admin@licita.test',
   password: process.env.E2E_PASSWORD ?? 'Admin-Demo-2026',
 })
 
 export const VIEWER = Object.freeze({
-  email: process.env.E2E_VIEWER_EMAIL ?? 'lector@suplos.test',
+  email: process.env.E2E_VIEWER_EMAIL ?? 'lector@licita.test',
   password: process.env.E2E_VIEWER_PASSWORD ?? 'Lector-Demo-2026',
 })
 

@@ -19,7 +19,7 @@ const showShell = computed(() => route.matched.length > 0 && route.meta.layout !
         <div class="container-xxl gap-3">
           <RouterLink :to="{ name: 'tenders.index' }" class="navbar-brand d-flex align-items-center gap-2 me-0">
             <span class="brand-mark" aria-hidden="true"></span>
-            <span class="brand-name">suplos</span>
+            <span class="brand-name">licita</span>
             <span class="brand-divider" aria-hidden="true"></span>
             <span class="brand-module">Licitaciones</span>
           </RouterLink>
