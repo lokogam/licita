@@ -43,7 +43,7 @@ final class TenderController
         tags: ['Licitaciones'],
         parameters: [
             new OA\QueryParameter(name: 'consecutive', description: 'Contiene', schema: new OA\Schema(type: 'string')),
-            new OA\QueryParameter(name: 'subject', description: 'Objeto contiene', schema: new OA\Schema(type: 'string')),
+            new OA\QueryParameter(name: 'subject', description: 'Objeto', schema: new OA\Schema(type: 'string')),
             new OA\QueryParameter(
                 name: 'description',
                 description: 'Descripción contiene',
@@ -92,7 +92,7 @@ final class TenderController
         tags: ['Licitaciones'],
         parameters: [
             new OA\QueryParameter(name: 'consecutive', description: 'Contiene', schema: new OA\Schema(type: 'string')),
-            new OA\QueryParameter(name: 'subject', description: 'Objeto contiene', schema: new OA\Schema(type: 'string')),
+            new OA\QueryParameter(name: 'subject', description: 'Objeto', schema: new OA\Schema(type: 'string')),
             new OA\QueryParameter(
                 name: 'description',
                 description: 'Descripción contiene',
