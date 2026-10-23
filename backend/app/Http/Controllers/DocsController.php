@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Core\Http\Request;
 use App\Core\Http\Response;
-use OpenApi\Generator;
+use App\Services\OpenApiSpec;
 
 /**
  * Serves the OpenAPI document generated from the code attributes and the Swagger UI.
@@ -14,18 +15,26 @@ final class DocsController
 {
     private const SWAGGER_UI_VERSION = '5.17.14';
 
-    /**
-     * GET /api/openapi.json
-     */
-    public function openapi(): Response
+    public function __construct(private readonly OpenApiSpec $spec)
     {
-        $spec = (new Generator())->generate([dirname(__DIR__, 2)]);
+    }
 
-        return new Response(
-            (string) $spec?->toJson(),
-            200,
-            ['Content-Type' => 'application/json; charset=utf-8'],
-        );
+    /**
+     * GET /api/openapi.json - cached document with ETag revalidation.
+     */
+    public function openapi(Request $request): Response
+    {
+        $json = $this->spec->json();
+        $headers = [
+            'ETag' => '"' . sha1($json) . '"',
+            'Cache-Control' => 'public, max-age=3600',
+        ];
+
+        if ($request->header('If-None-Match') === $headers['ETag']) {
+            return new Response('', 304, $headers);
+        }
+
+        return new Response($json, 200, ['Content-Type' => 'application/json; charset=utf-8'] + $headers);
     }
 
     /**

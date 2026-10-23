@@ -13,6 +13,7 @@ use App\Core\ExceptionHandler;
 use App\Core\Kernel;
 use App\Core\Routing\Router;
 use App\Services\DocumentStorage;
+use App\Services\OpenApiSpec;
 use App\Support\Clock;
 use App\Support\SystemClock;
 use Dotenv\Dotenv;
@@ -43,6 +44,10 @@ $container->instance(ConnectionInterface::class, $capsule->getConnection());
 
 $container->singleton(Clock::class, SystemClock::class);
 $container->singleton(DocumentStorage::class, fn (): DocumentStorage => new DocumentStorage($config['documents_path']));
+$container->singleton(
+    OpenApiSpec::class,
+    fn (): OpenApiSpec => new OpenApiSpec($config['storage_path'] . '/cache/openapi.json', $config['debug']),
+);
 
 $router = new Router($container);
 require $basePath . '/routes/api.php';

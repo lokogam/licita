@@ -34,4 +34,4 @@ RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-
 
 COPY . .
 
-RUN chown -R www-data:www-data storage
+RUN php bin/openapi-build.php     && chown -R www-data:www-data storage
