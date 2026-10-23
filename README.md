@@ -283,6 +283,7 @@ Cada regla se valida en el **frontend** (respuesta inmediata) y en el **backend*
 
 - Consultas solo con *bindings* de Eloquent/Query Builder; en los filtros `LIKE`, los comodines `%` y `_` se escapan.
 - Los archivos se validan por **MIME real** (`finfo`), además de la extensión y el tamaño. Se guardan **fuera de `public/`** con nombres aleatorios y solo se descargan a través de la API, comprobando que el documento pertenezca a esa licitación.
+- **Antivirus (ClamAV):** cada archivo se escanea con clamd (protocolo `INSTREAM`) antes de guardarse. Si está infectado se rechaza con 422; si el antivirus no responde, la carga se rechaza con 503 (falla cerrado). Para activarlo: `CLAMAV_ENABLED=true docker compose --profile antivirus up -d` (necesita ~1,5 GB de RAM). En el plan gratuito de Render está desactivado por falta de memoria. La prueba de integración usa el archivo de prueba EICAR: `composer test:antivirus`.
 - Las celdas del Excel se escriben como texto explícito, para evitar inyección de fórmulas.
 - Sin trazas de error en producción (`APP_DEBUG=false`); los errores inesperados se registran en `storage/logs`.
 - Cabeceras de seguridad (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) en Nginx y Apache, y versiones de servidor ocultas.

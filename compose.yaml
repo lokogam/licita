@@ -24,12 +24,31 @@ services:
       DB_DATABASE: ${DB_DATABASE:-suplos_tenders}
       DB_USERNAME: ${DB_USERNAME:-suplos}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CLAMAV_ENABLED: ${CLAMAV_ENABLED:-false}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
       TZ: America/Bogota
     volumes:
       - documents:/var/www/html/storage/app
     depends_on:
       db:
         condition: service_healthy
+
+  # Antivirus for uploaded documents (needs ~1.5 GB RAM; first start downloads signatures).
+  # Enable with: CLAMAV_ENABLED=true docker compose --profile antivirus up -d
+  clamav:
+    image: clamav/clamav:1.4
+    profiles: ["antivirus"]
+    ports:
+      - "${CLAMAV_FORWARD_PORT:-3310}:3310"
+    volumes:
+      - clamav-db:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
 
   db:
     image: mysql:8.4
@@ -55,3 +74,4 @@ services:
 volumes:
   db-data:
   documents:
+  clamav-db:

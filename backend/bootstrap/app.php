@@ -14,6 +14,9 @@ use App\Core\Kernel;
 use App\Core\Routing\Router;
 use App\Services\DocumentStorage;
 use App\Services\OpenApiSpec;
+use App\Services\Security\ClamAvScanner;
+use App\Services\Security\NullScanner;
+use App\Services\Security\VirusScanner;
 use App\Support\Clock;
 use App\Support\CursorCodec;
 use App\Support\SystemClock;
@@ -27,7 +30,7 @@ require_once $basePath . '/vendor/autoload.php';
 
 Dotenv::createImmutable($basePath)->safeLoad();
 
-/** @var array{env: string, debug: bool, key: string, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string, openapi_cache: string} $config */
+/** @var array{env: string, debug: bool, key: string, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string, openapi_cache: string, antivirus: array{enabled: bool, host: string, port: int}} $config */
 $config = require $basePath . '/config/app.php';
 
 date_default_timezone_set($config['timezone']);
@@ -44,6 +47,12 @@ $container->instance(Capsule::class, $capsule);
 $container->instance(ConnectionInterface::class, $capsule->getConnection());
 
 $container->singleton(Clock::class, SystemClock::class);
+$container->singleton(
+    VirusScanner::class,
+    fn (): VirusScanner => $config['antivirus']['enabled']
+        ? ClamAvScanner::tcp($config['antivirus']['host'], $config['antivirus']['port'])
+        : new NullScanner(),
+);
 $container->singleton(CursorCodec::class, fn (): CursorCodec => new CursorCodec($config['key']));
 $container->singleton(DocumentStorage::class, fn (): DocumentStorage => new DocumentStorage($config['documents_path']));
 $container->singleton(

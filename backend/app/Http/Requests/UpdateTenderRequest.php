@@ -6,6 +6,8 @@ namespace App\Http\Requests;
 
 use App\Core\Http\Request;
 use App\Models\TenderDocument;
+use App\Services\Security\VirusScanner;
+use App\Validation\Rules\Clean;
 use App\Validation\Validator;
 
 /**
@@ -15,13 +17,23 @@ final class UpdateTenderRequest extends StoreTenderRequest
 {
     public const MAX_DOCUMENT_KB = 10240;
 
+    public function __construct(private readonly VirusScanner $scanner)
+    {
+    }
+
     protected function rules(Request $request): array
     {
         return parent::rules($request) + [
             'documents' => ['array'],
             'documents.*.title' => ['required', 'string', 'max:100'],
             'documents.*.description' => ['required', 'string', 'max:200'],
-            'documents.*.file' => ['required', 'file', 'mimes:pdf,zip', 'max_kb:' . self::MAX_DOCUMENT_KB],
+            'documents.*.file' => [
+                'required',
+                'file',
+                'mimes:pdf,zip',
+                'max_kb:' . self::MAX_DOCUMENT_KB,
+                new Clean($this->scanner),
+            ],
         ];
     }
 
