@@ -1,0 +1,10 @@
+.env
+vendor
+tests
+coverage
+.phpunit.cache
+.phpunit.result.cache
+storage/app/*
+storage/logs/*
+!storage/app/.gitkeep
+!storage/logs/.gitkeep

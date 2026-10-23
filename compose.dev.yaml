@@ -1,0 +1,30 @@
+# Development overrides: live-mounted code, Vite hot reload and direct API access.
+# Usage: docker compose -f compose.yaml -f compose.dev.yaml up -d
+services:
+  frontend:
+    build:
+      target: development
+    environment:
+      VITE_API_PROXY_TARGET: http://backend
+      VITE_USE_POLLING: "true"
+    ports: !override
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+
+  backend:
+    build:
+      target: development
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "${API_PORT:-8081}:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./bd:/var/www/bd:ro # schema used by the feature tests
+
+volumes:
+  frontend-node-modules:
