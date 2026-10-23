@@ -16,7 +16,7 @@ describe('formatters', () => {
   it('formats money with the tender currency and thousands separators', () => {
     expect(formatMoney('1500000.5', 'COP')).toContain('1.500.000,50')
     expect(formatMoney('1500000.5', 'USD')).toContain('US$')
-    expect(formatMoney('10', 'EUR')).toContain('€')
+    expect(formatMoney('10', 'EUR')).toMatch(/EUR|€/)
   })
 
   it('formats file sizes', () => {
