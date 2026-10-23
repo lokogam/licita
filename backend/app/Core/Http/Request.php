@@ -49,6 +49,10 @@ final class Request
                 $headers[str_replace('_', '-', substr($key, 5))] = (string) $value;
             }
         }
+        // Behind mod_rewrite the header may arrive only as REDIRECT_HTTP_AUTHORIZATION.
+        if (!isset($headers['AUTHORIZATION']) && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $headers['AUTHORIZATION'] = (string) $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
         if (isset($_SERVER['CONTENT_TYPE'])) {
             $headers['Content-Type'] = (string) $_SERVER['CONTENT_TYPE'];
         }
