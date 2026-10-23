@@ -27,6 +27,9 @@ final class LoginThrottle
 
     public function hit(string $email, string $ip): void
     {
+        // Rows outside the window no longer count, so the table never grows unbounded.
+        Capsule::table('login_attempts')->where('attempted_at', '<=', $this->windowStart())->delete();
+
         Capsule::table('login_attempts')->insert([
             'email' => User::normalizeEmail($email),
             'ip' => $ip,
@@ -36,11 +39,16 @@ final class LoginThrottle
 
     public function tooManyAttempts(string $email, string $ip): bool
     {
-        $since = $this->clock->now()->modify("-{$this->decayMinutes} minutes")->format('Y-m-d H:i:s');
+        $since = $this->windowStart();
         $table = fn () => Capsule::table('login_attempts')->where('attempted_at', '>', $since);
 
         return $table()->where('email', User::normalizeEmail($email))->count() >= $this->maxAttempts
             || $table()->where('ip', $ip)->count() >= $this->maxAttempts;
+    }
+
+    private function windowStart(): string
+    {
+        return $this->clock->now()->modify("-{$this->decayMinutes} minutes")->format('Y-m-d H:i:s');
     }
 
     public function clear(string $email): void

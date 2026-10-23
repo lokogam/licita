@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
  */
 final class RefreshTokenService
 {
+    private const REUSE_GRACE_SECONDS = 30;
+
     public function __construct(
         private readonly Clock $clock,
         private readonly int $ttlDays = 7,
@@ -34,6 +36,12 @@ final class RefreshTokenService
     public function issue(User $user): string
     {
         $token = bin2hex(random_bytes(32));
+
+        // Expired tokens are useless (even for reuse detection), so they are pruned here.
+        RefreshToken::query()
+            ->where('user_id', $user->id)
+            ->where('expires_at', '<=', $this->clock->now()->format('Y-m-d H:i:s'))
+            ->delete();
 
         RefreshToken::query()->create([
             'user_id' => $user->id,
@@ -55,20 +63,43 @@ final class RefreshTokenService
         $record = $this->find($token);
 
         if ($record->revoked_at !== null) {
-            $this->revokeAllFor($record->user_id);
-            throw new AuthenticationException();
+            $this->rejectReuse($record);
         }
 
         if ($record->expires_at <= $this->clock->now()) {
             throw new AuthenticationException();
         }
 
-        $record->revoked_at = Carbon::instance($this->clock->now());
-        $record->save();
+        // Conditional update: only one of two simultaneous requests can win the rotation.
+        $won = RefreshToken::query()
+            ->whereKey($record->id)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => Carbon::instance($this->clock->now())]);
+
+        if ($won === 0) {
+            throw new AuthenticationException();
+        }
 
         $user = $record->user;
 
         return [$user, $this->issue($user)];
+    }
+
+    /**
+     * A token revoked moments ago is most likely a second tab that lost the race,
+     * so it is only rejected. An older one means the token was copied: every session ends.
+     *
+     * @throws AuthenticationException
+     */
+    private function rejectReuse(RefreshToken $record): never
+    {
+        $graceStart = $this->clock->now()->modify('-' . self::REUSE_GRACE_SECONDS . ' seconds');
+
+        if ($record->revoked_at === null || $record->revoked_at < $graceStart) {
+            $this->revokeAllFor($record->user_id);
+        }
+
+        throw new AuthenticationException();
     }
 
     public function revoke(string $token): void

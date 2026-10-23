@@ -55,7 +55,7 @@ final class DemoUsersSeederTest extends DatabaseTestCase
             $this->assertStringContainsString("'{$demo['email']}'", $sql);
             $this->assertStringNotContainsString($demo['password'], $sql);
         }
-        $this->assertStringContainsString('INSERT IGNORE INTO `users`', $sql);
+        $this->assertStringContainsString("INSERT IGNORE INTO `users`\n", $sql);
         $this->assertStringContainsString('$argon2id$', $sql);
     }
 }

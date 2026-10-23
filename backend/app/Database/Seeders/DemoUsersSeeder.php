@@ -70,7 +70,8 @@ final class DemoUsersSeeder
         );
 
         return "-- Demo users (one per role). Passwords are listed in the README.\n"
-            . "INSERT IGNORE INTO `users` (`name`, `email`, `password_hash`, `role`, `created_at`, `updated_at`) VALUES\n"
+            . "INSERT IGNORE INTO `users`\n"
+            . "  (`name`, `email`, `password_hash`, `role`, `created_at`, `updated_at`) VALUES\n"
             . implode(",\n", $rows) . ";\n";
     }
 }

@@ -6,6 +6,7 @@ namespace Tests\Feature\Auth;
 
 use App\Services\Auth\LoginThrottle;
 use App\Support\FrozenClock;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Tests\DatabaseTestCase;
 
 final class LoginThrottleTest extends DatabaseTestCase
@@ -34,6 +35,14 @@ final class LoginThrottleTest extends DatabaseTestCase
         $later = new LoginThrottle(new FrozenClock('2026-10-23 10:16:00'));
 
         $this->assertFalse($later->tooManyAttempts('ana@example.com', '10.0.0.1'));
+    }
+
+    public function test_recording_an_attempt_prunes_rows_outside_the_window(): void
+    {
+        (new LoginThrottle(new FrozenClock('2026-10-22 10:00:00')))->hit('old@example.com', '10.0.0.1');
+        (new LoginThrottle(new FrozenClock('2026-10-23 10:00:00')))->hit('ana@example.com', '10.0.0.1');
+
+        $this->assertSame(1, Capsule::table('login_attempts')->count());
     }
 
     public function test_a_successful_login_clears_the_attempts_for_that_email(): void

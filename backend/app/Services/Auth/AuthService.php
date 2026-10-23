@@ -14,6 +14,10 @@ use App\Models\User;
  */
 final class AuthService
 {
+    /** Argon2id hash of a random string, with the same cost as real passwords. */
+    private const DUMMY_HASH = '$argon2id$v=19$m=65536,t=4,p=1$NzFMMzBnTFhaLldTcTFscA$'
+        . 'ojho7i8fwB7zbL5tzN+HjW5GMoK5uagjIjB6/2ZAol8';
+
     public function __construct(
         private readonly JwtService $jwt,
         private readonly RefreshTokenService $refreshTokens,
@@ -37,6 +41,11 @@ final class AuthService
         }
 
         $user = User::findByEmail($email);
+        if ($user === null) {
+            // Same hashing cost as a real check, so timing does not reveal which emails exist.
+            password_verify($password, self::DUMMY_HASH);
+        }
+
         if ($user === null || !$user->verifyPassword($password)) {
             $this->throttle->hit($email, $ip);
             throw new AuthenticationException('Correo o contraseña incorrectos.');

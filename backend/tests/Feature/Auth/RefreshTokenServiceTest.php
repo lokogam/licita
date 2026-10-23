@@ -42,14 +42,41 @@ final class RefreshTokenServiceTest extends DatabaseTestCase
         $original = $service->issue($this->owner);
         [, $current] = $service->rotate($original);
 
+        $later = $this->service('2026-10-23 10:05:00');
         try {
-            $service->rotate($original);
+            $later->rotate($original);
             $this->fail('Reusing a rotated token must fail.');
         } catch (AuthenticationException) {
         }
 
         $this->expectException(AuthenticationException::class);
-        $service->rotate($current);
+        $later->rotate($current);
+    }
+
+    public function test_a_concurrent_refresh_within_the_grace_window_does_not_revoke_the_family(): void
+    {
+        // Two tabs share the cookie and refresh at the same moment: the second one loses
+        // the race, but that is not a stolen token.
+        $service = $this->service('2026-10-23 10:00:00');
+        $original = $service->issue($this->owner);
+        [, $current] = $service->rotate($original);
+
+        try {
+            $this->service('2026-10-23 10:00:10')->rotate($original);
+            $this->fail('The losing request must still be rejected.');
+        } catch (AuthenticationException) {
+        }
+
+        [$user] = $this->service('2026-10-23 10:00:20')->rotate($current);
+        $this->assertSame($this->owner->id, $user->id);
+    }
+
+    public function test_issuing_prunes_expired_tokens_of_the_user(): void
+    {
+        $this->service('2026-09-01 10:00:00')->issue($this->owner);
+        $this->service('2026-10-23 10:00:00')->issue($this->owner);
+
+        $this->assertSame(1, RefreshToken::query()->where('user_id', $this->owner->id)->count());
     }
 
     public function test_expired_tokens_are_rejected(): void

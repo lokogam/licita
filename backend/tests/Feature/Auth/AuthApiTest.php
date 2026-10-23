@@ -49,6 +49,26 @@ final class AuthApiTest extends DatabaseTestCase
         }
     }
 
+    public function test_unknown_emails_still_pay_for_a_password_hash(): void
+    {
+        // Same work for both branches, so response time does not reveal registered emails.
+        $fastest = function (string $email): int {
+            $times = [];
+            for ($i = 0; $i < 2; $i++) { // 4 attempts in total: below the lockout threshold
+                $start = hrtime(true);
+                $this->login($email, 'cualquier-clave');
+                $times[] = hrtime(true) - $start;
+            }
+
+            return min($times);
+        };
+
+        $known = $fastest('ana@example.com');
+        $unknown = $fastest('nadie@example.com');
+
+        $this->assertGreaterThan($known * 0.5, $unknown);
+    }
+
     public function test_login_validates_the_payload(): void
     {
         $response = $this->call('POST', '/api/auth/login', ['email' => '', 'password' => '']);
