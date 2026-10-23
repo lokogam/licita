@@ -19,6 +19,11 @@
         <exclude-pattern>tests/*</exclude-pattern>
     </rule>
 
+    <!-- Data providers hold long literal messages. -->
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+
     <!-- Test method names use snake_case for readability (test_it_does_something). -->
     <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
         <exclude-pattern>tests/*</exclude-pattern>

@@ -14,14 +14,13 @@ trait CreatesTenders
 {
     protected function activity(int $productCode = 43211503, string $product = 'Computadores portátiles'): Activity
     {
-        return Activity::query()->create([
+        return Activity::query()->firstOrCreate(['product_code' => $productCode], [
             'segment_code' => 43000000,
             'segment' => 'Tecnologías de la información',
             'family_code' => 43210000,
             'family' => 'Equipo informático',
             'class_code' => 43211500,
             'class_name' => 'Computadores',
-            'product_code' => $productCode,
             'product' => $product,
         ]);
     }
