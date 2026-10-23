@@ -72,7 +72,7 @@ final class TendersExport
 
         $header = $sheet->getStyle('A1:F1');
         $header->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $header->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('262F6B');
+        $header->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('123C3F');
 
         foreach (self::COLUMN_WIDTHS as $column => $width) {
             $sheet->getColumnDimension($column)->setWidth($width);
