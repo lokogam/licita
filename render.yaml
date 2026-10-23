@@ -48,7 +48,7 @@ services:
       # Same-origin API: the static site proxies /api to the backend service.
       - type: rewrite
         source: /api/*
-        destination: https://licita-api.onrender.com/api/*
+        destination: https://api-licitaciones.duvangamboa.dev/api/*
       # Vue Router history mode.
       - type: rewrite
         source: /*
