@@ -35,7 +35,7 @@
         "analyse": "phpstan analyse --memory-limit=512M",
         "lint": "phpcs",
         "lint:fix": "phpcbf",
-        "openapi:build": "php bin/openapi-build.php"
+        "openapi:build": "php bin/console openapi:build"
     },
     "config": {
         "platform": {
