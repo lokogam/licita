@@ -175,12 +175,13 @@ export function validateTender(form) {
  */
 
 /**
- * Validates a document before it is added to the pending list.
+ * Validates a document before it is added to the pending list or saved.
  *
  * @param {DocumentDraft} document
+ * @param {{requireFile?: boolean}} [options] the file is optional when editing a saved document
  * @returns {Record<string, string>}
  */
-export function validateDocument(document) {
+export function validateDocument(document, { requireFile = true } = {}) {
   const errors = {}
 
   const title = textError(document.title, 'título', LIMITS.documentTitle)
@@ -191,7 +192,7 @@ export function validateDocument(document) {
 
   const file = document.file
   if (!file) {
-    errors.file = 'Debe seleccionar un archivo.'
+    if (requireFile) errors.file = 'Debe seleccionar un archivo.'
   } else {
     const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
     if (!DOCUMENT_EXTENSIONS.includes(extension) || !DOCUMENT_MIME_TYPES.includes(file.type)) {

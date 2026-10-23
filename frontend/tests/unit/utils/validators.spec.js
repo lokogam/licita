@@ -168,6 +168,8 @@ describe('validateDocument', () => {
   })
 
   it('can make the file optional when editing an existing document', () => {
-    expect(validateDocument({ title: 'Pliego', description: 'Principal', file: null }, { requireFile: false })).toEqual({})
+    expect(validateDocument({ title: 'Pliego', description: 'Principal', file: null }, { requireFile: false })).toEqual(
+      {},
+    )
   })
 })

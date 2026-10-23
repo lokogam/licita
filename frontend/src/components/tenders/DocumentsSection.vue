@@ -12,7 +12,10 @@ const props = defineProps({
   error: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'edit-existing', 'delete-existing'])
+
+/** The API requires at least one saved document, so the last one cannot be deleted. */
+const canDeleteExisting = computed(() => props.existing.length > 1)
 
 const showModal = ref(false)
 const total = computed(() => props.existing.length + props.modelValue.length)
@@ -68,7 +71,27 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
                 </a>
                 <small class="text-body-secondary ms-1">{{ formatBytes(document.size) }}</small>
               </td>
-              <td class="text-end"><span class="badge text-bg-light border">Guardado</span></td>
+              <td class="text-end text-nowrap">
+                <span class="badge text-bg-light border me-2">Guardado</span>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-link p-0 me-2"
+                  :aria-label="`Editar ${document.original_name}`"
+                  @click="emit('edit-existing', document)"
+                >
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-link text-danger p-0"
+                  :aria-label="`Eliminar ${document.original_name}`"
+                  :title="canDeleteExisting ? 'Eliminar documento' : 'Debe quedar al menos 1 documento guardado'"
+                  :disabled="!canDeleteExisting"
+                  @click="emit('delete-existing', document)"
+                >
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                </button>
+              </td>
             </tr>
             <tr v-for="(document, index) in modelValue" :key="`pending-${index}`" class="table-row-pending">
               <td class="fw-semibold">{{ document.title }}</td>
