@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Core\Http\FileResponse;
 use App\Core\Http\JsonResponse;
 use App\Core\Http\Request;
 use App\Http\Requests\StoreTenderRequest;
@@ -13,6 +14,8 @@ use App\Models\Tender;
 use App\Repositories\TenderFilters;
 use App\Repositories\TenderRepository;
 use App\Services\TenderService;
+use App\Support\Clock;
+use App\Views\Exports\TendersExport;
 
 /**
  * Tenders endpoints: list, create, detail and update.
@@ -44,6 +47,21 @@ final class TenderController
             'data' => $result->items->map(fn (Tender $tender): array => $this->resource->summary($tender))->all(),
             'meta' => $result->meta(),
         ]);
+    }
+
+    /**
+     * GET /api/tenders/export - Excel with every tender matching the list filters (no pagination).
+     */
+    public function export(Request $request, TendersExport $export, Clock $clock): FileResponse
+    {
+        $path = $export->render($this->tenders->all(TenderFilters::fromRequest($request)));
+
+        return new FileResponse(
+            $path,
+            'licitaciones-' . $clock->now()->format('Ymd-His') . '.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            deleteAfterSend: true,
+        );
     }
 
     /**
