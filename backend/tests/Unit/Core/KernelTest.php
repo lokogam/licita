@@ -85,7 +85,7 @@ final class KernelTest extends TestCase
             'POST',
             '/api/items',
             headers: ['Content-Type' => 'application/json'],
-            rawBody: "{\"subject\": \"Compra de portátiles\"}",
+            rawBody: "{\"subject\": \"Compra de port\xE1tiles\"}", // Latin-1 byte, not UTF-8
         ));
 
         $this->assertSame(400, $response->status());

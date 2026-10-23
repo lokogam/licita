@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Core\Exceptions\HttpException;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Core\Routing\Router;
@@ -28,6 +29,13 @@ final class Kernel
         }
 
         try {
+            if ($request->hasMalformedBody()) {
+                throw new HttpException(
+                    400,
+                    'El cuerpo de la petición no es un JSON válido (verifique que esté codificado en UTF-8).',
+                );
+            }
+
             $response = $this->router->dispatch($request);
         } catch (Throwable $e) {
             $response = $this->exceptionHandler->render($e);

@@ -24,6 +24,7 @@ final class Request
         private readonly array $files,
         private readonly array $headers,
         private readonly array $routeParams = [],
+        private readonly bool $malformedBody = false,
     ) {
     }
 
@@ -42,20 +43,14 @@ final class Request
             $headers['Content-Type'] = (string) $_SERVER['CONTENT_TYPE'];
         }
 
-        $body = $_POST;
-        $contentType = strtolower($headers['Content-Type'] ?? '');
-        if (str_contains($contentType, 'application/json')) {
-            $decoded = json_decode((string) file_get_contents('php://input'), true);
-            $body = is_array($decoded) ? $decoded : [];
-        }
-
         return self::create(
             (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
             (string) ($_SERVER['REQUEST_URI'] ?? '/'),
             $_GET,
-            $body,
+            $_POST,
             self::normalizeFiles($_FILES),
             $headers,
+            (string) file_get_contents('php://input'),
         );
     }
 
@@ -66,6 +61,7 @@ final class Request
      * @param array<string, mixed> $body
      * @param array<string, mixed> $files
      * @param array<string, string> $headers
+     * @param string|null $rawBody Request payload; decoded when the content type is JSON.
      */
     public static function create(
         string $method,
@@ -74,7 +70,17 @@ final class Request
         array $body = [],
         array $files = [],
         array $headers = [],
+        ?string $rawBody = null,
     ): self {
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        $malformed = false;
+
+        if ($rawBody !== null && $rawBody !== '' && str_contains(strtolower($headers['content-type'] ?? ''), 'json')) {
+            $decoded = json_decode($rawBody, true);
+            $malformed = !is_array($decoded);
+            $body = is_array($decoded) ? $decoded : [];
+        }
+
         $parts = parse_url($uri);
         $path = '/' . trim(rawurldecode($parts['path'] ?? '/'), '/');
 
@@ -99,7 +105,9 @@ final class Request
             $query,
             $body,
             $files,
-            array_change_key_case($headers, CASE_LOWER),
+            $headers,
+            [],
+            $malformed,
         );
     }
 
@@ -118,7 +126,16 @@ final class Request
             $this->files,
             $this->headers,
             $params,
+            $this->malformedBody,
         );
+    }
+
+    /**
+     * True when a JSON payload could not be decoded.
+     */
+    public function hasMalformedBody(): bool
+    {
+        return $this->malformedBody;
     }
 
     public function method(): string
