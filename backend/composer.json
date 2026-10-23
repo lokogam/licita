@@ -34,7 +34,8 @@
         "test:feature": "phpunit --testsuite Feature",
         "analyse": "phpstan analyse --memory-limit=512M",
         "lint": "phpcs",
-        "lint:fix": "phpcbf"
+        "lint:fix": "phpcbf",
+        "openapi:build": "php bin/openapi-build.php"
     },
     "config": {
         "platform": {
