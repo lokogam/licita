@@ -128,6 +128,7 @@ async function save(payload) {
         <template #extra>
           <DocumentsSection
             v-model="pending"
+            :tender-id="tender.id"
             :existing="tender.documents"
             :error="documentsError"
             @edit-existing="editingDocument = $event"

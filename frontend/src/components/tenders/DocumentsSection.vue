@@ -4,15 +4,24 @@
  */
 import { computed, ref } from 'vue'
 import DocumentModal from '@/components/tenders/DocumentModal.vue'
+import { useAuth } from '@/composables/useAuth'
+import { useDocumentDownload } from '@/composables/useDocumentDownload'
 import { formatBytes } from '@/utils/formatters'
 
 const props = defineProps({
+  tenderId: { type: [Number, String], default: null },
   existing: { type: Array, default: () => [] },
   modelValue: { type: Array, default: () => [] },
   error: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue', 'edit-existing', 'delete-existing'])
+
+const { can } = useAuth()
+const { download, downloadingId } = useDocumentDownload()
+
+/** Editing or deleting saved documents needs its own permission (documents.manage). */
+const canManageDocuments = computed(() => can('documents.manage'))
 
 /** The API requires at least one saved document, so the last one cannot be deleted. */
 const canDeleteExisting = computed(() => props.existing.length > 1)
@@ -65,32 +74,44 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
               <td class="fw-semibold">{{ document.title }}</td>
               <td class="text-body-secondary">{{ document.description }}</td>
               <td>
-                <a :href="document.download_url" class="file-link">
-                  <i class="bi" :class="fileIcon(document.original_name)" aria-hidden="true"></i>
+                <a
+                  :href="document.download_url"
+                  class="file-link"
+                  :aria-busy="downloadingId === document.id"
+                  @click.prevent="download(tenderId, document)"
+                >
+                  <span
+                    v-if="downloadingId === document.id"
+                    class="spinner-border spinner-border-sm"
+                    aria-hidden="true"
+                  ></span>
+                  <i v-else class="bi" :class="fileIcon(document.original_name)" aria-hidden="true"></i>
                   {{ document.original_name }}
                 </a>
                 <small class="text-body-secondary ms-1">{{ formatBytes(document.size) }}</small>
               </td>
               <td class="text-end text-nowrap">
-                <span class="badge text-bg-light border me-2">Guardado</span>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-link p-0 me-2"
-                  :aria-label="`Editar ${document.original_name}`"
-                  @click="emit('edit-existing', document)"
-                >
-                  <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-link text-danger p-0"
-                  :aria-label="`Eliminar ${document.original_name}`"
-                  :title="canDeleteExisting ? 'Eliminar documento' : 'Debe quedar al menos 1 documento guardado'"
-                  :disabled="!canDeleteExisting"
-                  @click="emit('delete-existing', document)"
-                >
-                  <i class="bi bi-trash3" aria-hidden="true"></i>
-                </button>
+                <span class="badge text-bg-light border" :class="{ 'me-2': canManageDocuments }">Guardado</span>
+                <template v-if="canManageDocuments">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-link p-0 me-2"
+                    :aria-label="`Editar ${document.original_name}`"
+                    @click="emit('edit-existing', document)"
+                  >
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-link text-danger p-0"
+                    :aria-label="`Eliminar ${document.original_name}`"
+                    :title="canDeleteExisting ? 'Eliminar documento' : 'Debe quedar al menos 1 documento guardado'"
+                    :disabled="!canDeleteExisting"
+                    @click="emit('delete-existing', document)"
+                  >
+                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                  </button>
+                </template>
               </td>
             </tr>
             <tr v-for="(document, index) in modelValue" :key="`pending-${index}`" class="table-row-pending">

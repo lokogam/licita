@@ -100,6 +100,22 @@ export async function exportTenders(filters) {
 }
 
 /**
+ * Downloads a saved document. It goes through Axios so the access token is sent.
+ *
+ * @param {number|string} tenderId
+ * @param {{id: number|string, original_name: string}} document
+ * @returns {Promise<{blob: Blob, filename: string}>}
+ */
+export async function downloadDocument(tenderId, document) {
+  const response = await http.get(`/tenders/${tenderId}/documents/${document.id}/download`, { responseType: 'blob' })
+
+  return {
+    blob: response.data,
+    filename: filenameFromDisposition(response.headers['content-disposition'], document.original_name),
+  }
+}
+
+/**
  * @param {object} payload
  * @param {Array<{title: string, description: string, file: File}>} documents
  * @returns {FormData}

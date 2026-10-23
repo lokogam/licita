@@ -7,12 +7,48 @@ import axios from 'axios'
  * @property {Record<string, string>} errors First validation message per field
  */
 
-/** Axios instance for the tenders API. */
+/**
+ * @typedef {Object} AuthHandlers
+ * @property {() => string|null} getAccessToken current in-memory access token
+ * @property {() => Promise<unknown>} refresh renews the access token with the refresh cookie
+ * @property {() => void} onSessionExpired called when the session cannot be renewed
+ */
+
+/** Axios instance for the tenders API. The refresh cookie travels with `withCredentials`. */
 export const http = axios.create({
   baseURL: '/api',
   headers: { Accept: 'application/json' },
   timeout: 60000,
+  withCredentials: true,
 })
+
+/** Session endpoints never trigger a refresh-and-retry (a 401 there is a real answer). */
+const SESSION_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/logout']
+
+/** @type {AuthHandlers} */
+let authHandlers = {
+  getAccessToken: () => null,
+  refresh: () => Promise.reject(new Error('No session')),
+  onSessionExpired: () => {},
+}
+
+/**
+ * Connects the HTTP client with the session (kept in useAuth to avoid a circular import).
+ *
+ * @param {Partial<AuthHandlers>} handlers
+ */
+export function setAuthHandlers(handlers) {
+  authHandlers = { ...authHandlers, ...handlers }
+}
+
+/**
+ * @param {string|undefined} url
+ * @returns {boolean}
+ */
+export function isSessionEndpoint(url) {
+  const path = (url ?? '').split('?')[0].replace(/^\/api/, '')
+  return SESSION_ENDPOINTS.includes(path)
+}
 
 /**
  * Normalizes any Axios error into an ApiError.
@@ -41,7 +77,37 @@ export function toApiError(error) {
   return { status: 0, message: error?.message ?? 'Ocurrió un error inesperado.', errors: {} }
 }
 
-http.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(toApiError(error)),
-)
+http.interceptors.request.use((config) => {
+  const token = authHandlers.getAccessToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+
+  return config
+})
+
+/**
+ * On a 401 from a protected endpoint the access token is renewed once and the request repeated once.
+ * If the session cannot be renewed the user is sent back to the login screen.
+ *
+ * @param {any} error
+ * @returns {Promise<any>}
+ */
+export async function handleResponseError(error) {
+  const config = error?.config
+  const unauthorized = error?.response?.status === 401
+
+  if (unauthorized && config && !config._retried && !isSessionEndpoint(config.url)) {
+    config._retried = true
+    try {
+      await authHandlers.refresh()
+    } catch (refreshError) {
+      if (refreshError?.status === 401 || refreshError?.response?.status === 401) authHandlers.onSessionExpired()
+      throw toApiError(error)
+    }
+
+    return http.request(config)
+  }
+
+  throw toApiError(error)
+}
+
+http.interceptors.response.use((response) => response, handleResponseError)

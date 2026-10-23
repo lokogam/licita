@@ -1,0 +1,2 @@
+# Shared, non-secret Vite settings for local development (the root .gitignore excludes .env.*).
+!.env.development
