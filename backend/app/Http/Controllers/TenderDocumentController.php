@@ -61,6 +61,6 @@ final class TenderDocumentController
             throw new NotFoundHttpException('El documento solicitado no existe.');
         }
 
-        return new FileResponse($path, $document->original_name, $document->mime_type);
+        return new FileResponse($path, $document->original_name, $document->mime_type ?: 'application/octet-stream');
     }
 }

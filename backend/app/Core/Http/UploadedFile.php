@@ -12,6 +12,8 @@ use RuntimeException;
  */
 final class UploadedFile
 {
+    private ?string $detectedMimeType = null;
+
     public function __construct(
         private readonly string $path,
         private readonly string $originalName,
@@ -62,18 +64,20 @@ final class UploadedFile
      */
     public function detectedMimeType(): string
     {
-        if (!$this->isValid()) {
-            return '';
+        if ($this->detectedMimeType === null && $this->isValid()) {
+            $this->detectedMimeType = (string) (new finfo(FILEINFO_MIME_TYPE))->file($this->path);
         }
 
-        return (string) (new finfo(FILEINFO_MIME_TYPE))->file($this->path);
+        return $this->detectedMimeType ?? '';
     }
 
     /**
-     * Moves the file to its final location.
+     * Moves the file to its final location (the detected MIME type is kept).
      */
     public function moveTo(string $destination): void
     {
+        $this->detectedMimeType();
+
         $directory = dirname($destination);
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
             throw new RuntimeException("Unable to create directory [{$directory}].");
@@ -81,7 +85,7 @@ final class UploadedFile
 
         $moved = is_uploaded_file($this->path)
             ? move_uploaded_file($this->path, $destination)
-            : copy($this->path, $destination);
+            : rename($this->path, $destination);
 
         if (!$moved) {
             throw new RuntimeException('Unable to store the uploaded file.');
