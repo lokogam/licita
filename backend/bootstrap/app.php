@@ -15,6 +15,7 @@ use App\Core\Routing\Router;
 use App\Services\DocumentStorage;
 use App\Services\OpenApiSpec;
 use App\Support\Clock;
+use App\Support\CursorCodec;
 use App\Support\SystemClock;
 use Dotenv\Dotenv;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -26,7 +27,7 @@ require_once $basePath . '/vendor/autoload.php';
 
 Dotenv::createImmutable($basePath)->safeLoad();
 
-/** @var array{env: string, debug: bool, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string, openapi_cache: string} $config */
+/** @var array{env: string, debug: bool, key: string, url: string, timezone: string, cors_origin: string, storage_path: string, documents_path: string, openapi_cache: string} $config */
 $config = require $basePath . '/config/app.php';
 
 date_default_timezone_set($config['timezone']);
@@ -43,6 +44,7 @@ $container->instance(Capsule::class, $capsule);
 $container->instance(ConnectionInterface::class, $capsule->getConnection());
 
 $container->singleton(Clock::class, SystemClock::class);
+$container->singleton(CursorCodec::class, fn (): CursorCodec => new CursorCodec($config['key']));
 $container->singleton(DocumentStorage::class, fn (): DocumentStorage => new DocumentStorage($config['documents_path']));
 $container->singleton(
     OpenApiSpec::class,
