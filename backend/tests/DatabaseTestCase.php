@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Core\Container;
-use App\Database\Migrator;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Core\Kernel;
+use App\Database\Migrator;
+use App\Enums\Role;
+use App\Models\User;
+use App\Services\Auth\JwtService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * The schema is built from the migrations once per run and every test
  * runs inside a transaction that is rolled back afterwards.
+ * Requests are authenticated as an administrator unless a test chooses otherwise.
  */
 abstract class DatabaseTestCase extends TestCase
 {
@@ -26,6 +30,10 @@ abstract class DatabaseTestCase extends TestCase
     protected Kernel $kernel;
 
     protected Container $container;
+
+    protected ?string $accessToken = null;
+
+    protected ?User $user = null;
 
     protected function setUp(): void
     {
@@ -38,6 +46,30 @@ abstract class DatabaseTestCase extends TestCase
         self::migrateOnce();
 
         Capsule::connection()->beginTransaction();
+
+        $this->actingAs(Role::Admin);
+    }
+
+    /**
+     * Authenticates the following requests as a new user with the given role.
+     */
+    protected function actingAs(Role $role): User
+    {
+        $this->user = User::register(
+            ucfirst($role->value) . ' Test',
+            $role->value . '-' . bin2hex(random_bytes(4)) . '@test.local',
+            'Clave-Segura-2026',
+            $role,
+        );
+        $this->accessToken = $this->container->make(JwtService::class)->issue(['sub' => $this->user->id]);
+
+        return $this->user;
+    }
+
+    protected function actingAsGuest(): void
+    {
+        $this->user = null;
+        $this->accessToken = null;
     }
 
     protected function tearDown(): void
@@ -52,10 +84,34 @@ abstract class DatabaseTestCase extends TestCase
      *
      * @param array<string, mixed> $body
      * @param array<string, mixed> $files
+     * @param array<string, string> $cookies
+     * @param array<string, string> $headers
      */
-    protected function call(string $method, string $uri, array $body = [], array $files = []): Response
+    protected function call(
+        string $method,
+        string $uri,
+        array $body = [],
+        array $files = [],
+        array $cookies = [],
+        array $headers = [],
+    ): Response {
+        if ($this->accessToken !== null) {
+            $headers += ['Authorization' => 'Bearer ' . $this->accessToken];
+        }
+
+        return $this->kernel->handle(
+            Request::create($method, $uri, body: $body, files: $files, headers: $headers, cookies: $cookies),
+        );
+    }
+
+    /**
+     * Value of a cookie set by the response (null when absent).
+     */
+    protected function cookieFrom(Response $response, string $name): ?string
     {
-        return $this->kernel->handle(Request::create($method, $uri, body: $body, files: $files));
+        $header = $response->headers()['Set-Cookie'] ?? '';
+
+        return preg_match('/(?:^|;\s*)' . preg_quote($name, '/') . '=([^;]*)/', $header, $m) === 1 ? $m[1] : null;
     }
 
     /**
