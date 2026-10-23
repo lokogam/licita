@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/backend/vendor/
+/frontend/node_modules/
+
+# Build output
+/frontend/dist/
+
+# Runtime storage
+/backend/storage/app/*
+!/backend/storage/app/.gitkeep
+/backend/storage/logs/*
+!/backend/storage/logs/.gitkeep
+
+# Tooling caches
+/backend/.phpunit.cache/
+/backend/.phpunit.result.cache
+/backend/coverage/
+/frontend/coverage/
+/frontend/test-results/
+/frontend/playwright-report/
+/frontend/blob-report/
+/frontend/playwright/.cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
