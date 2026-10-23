@@ -2,9 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import TenderDetailView from '@/views/TenderDetailView.vue'
-import { getTender } from '@/api/tenders'
+import { downloadDocument, getTender } from '@/api/tenders'
+import { saveBlob } from '@/utils/download'
 
-vi.mock('@/api/tenders', () => ({ getTender: vi.fn() }))
+vi.mock('@/api/tenders', () => ({ getTender: vi.fn(), downloadDocument: vi.fn() }))
+vi.mock('@/utils/download', () => ({ saveBlob: vi.fn() }))
+const auth = vi.hoisted(() => ({ abilities: [] }))
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => ({ can: (ability) => auth.abilities.includes(ability) }),
+}))
+
+const ADMIN = ['tenders.view', 'tenders.create', 'tenders.update', 'documents.manage', 'users.manage']
 
 const tender = {
   id: 3,
@@ -60,6 +68,7 @@ async function mountView() {
 
 describe('TenderDetailView', () => {
   beforeEach(() => {
+    auth.abilities = ADMIN
     getTender.mockReset()
     getTender.mockResolvedValue(tender)
   })
@@ -87,6 +96,26 @@ describe('TenderDetailView', () => {
 
     await tabs[2].trigger('click')
     expect(wrapper.get('a[href="/api/tenders/3/documents/1/download"]').text()).toContain('pliego.pdf')
+  })
+
+  it('hides the edit button from read-only users', async () => {
+    auth.abilities = ['tenders.view']
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('Servicio de vigilancia')
+    expect(wrapper.find('a[href="/licitaciones/3/editar"]').exists()).toBe(false)
+  })
+
+  it('downloads documents through the API client (with the access token)', async () => {
+    const blob = new Blob(['%PDF'])
+    downloadDocument.mockResolvedValue({ blob, filename: 'pliego.pdf' })
+    const wrapper = await mountView()
+
+    await wrapper.get('a[href="/api/tenders/3/documents/1/download"]').trigger('click')
+    await flushPromises()
+
+    expect(downloadDocument).toHaveBeenCalledWith(3, expect.objectContaining({ id: 1 }))
+    expect(saveBlob).toHaveBeenCalledWith(blob, 'pliego.pdf')
   })
 
   it('shows a not found message for unknown tenders', async () => {

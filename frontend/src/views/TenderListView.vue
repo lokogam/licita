@@ -9,6 +9,7 @@ import PageHeader from '@/components/base/PageHeader.vue'
 import PaginationBar from '@/components/base/PaginationBar.vue'
 import StatusBadge from '@/components/base/StatusBadge.vue'
 import { exportTenders, listTenders } from '@/api/tenders'
+import { useAuth } from '@/composables/useAuth'
 import { useDebouncedFn } from '@/composables/useDebouncedFn'
 import { useToasts } from '@/composables/useToasts'
 import { saveBlob } from '@/utils/download'
@@ -26,6 +27,7 @@ const STATUS_OPTIONS = [
 const route = useRoute()
 const router = useRouter()
 const { notify } = useToasts()
+const { can } = useAuth()
 
 const filters = reactive(Object.fromEntries(FILTER_KEYS.map((key) => [key, String(route.query[key] ?? '')])))
 const tenders = ref([])
@@ -102,7 +104,7 @@ async function exportExcel() {
           <span v-if="exporting" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
           <i v-else class="bi bi-file-earmark-excel me-2" aria-hidden="true"></i>Exportar Excel
         </button>
-        <RouterLink :to="{ name: 'tenders.create' }" class="btn btn-primary">
+        <RouterLink v-if="can('tenders.create')" :to="{ name: 'tenders.create' }" class="btn btn-primary">
           <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Nueva licitación
         </RouterLink>
       </template>
@@ -226,13 +228,15 @@ async function exportExcel() {
           :description="
             hasFilters
               ? 'Ajuste o limpie los filtros para ver más resultados.'
-              : 'Cree la primera licitación para empezar.'
+              : can('tenders.create')
+                ? 'Cree la primera licitación para empezar.'
+                : 'Cuando se registren licitaciones aparecerán aquí.'
           "
         >
           <button v-if="hasFilters" type="button" class="btn btn-outline-secondary btn-sm" @click="clearFilters">
             Limpiar filtros
           </button>
-          <RouterLink v-else :to="{ name: 'tenders.create' }" class="btn btn-primary btn-sm"
+          <RouterLink v-else-if="can('tenders.create')" :to="{ name: 'tenders.create' }" class="btn btn-primary btn-sm"
             >Nueva licitación</RouterLink
           >
         </EmptyState>

@@ -15,6 +15,7 @@ final class HealthController
     #[OA\Get(
         path: '/api/health',
         summary: 'Estado del servicio',
+        security: [],
         tags: ['Sistema'],
         responses: [
             new OA\Response(

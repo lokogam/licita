@@ -15,9 +15,6 @@ final class Migrator
 {
     private const TABLE = 'migrations';
 
-    /** Table that proves the schema was already created from the bd/ SQL scripts. */
-    private const LEGACY_MARKER_TABLE = 'tenders';
-
     public function __construct(
         private readonly Connection $db,
         private readonly string $path,
@@ -112,8 +109,8 @@ final class Migrator
     }
 
     /**
-     * Creates the repository table. A database already built from the bd/ scripts
-     * (no repository but existing tables) is baselined: every migration is marked as run.
+     * Creates the repository table. For a database already built from the bd/ scripts
+     * (no repository yet), every migration whose tables already exist is marked as run.
      */
     private function ensureRepository(): void
     {
@@ -122,16 +119,17 @@ final class Migrator
             return;
         }
 
-        $legacy = $schema->hasTable(self::LEGACY_MARKER_TABLE);
-
         $schema->create(self::TABLE, function (Blueprint $table): void {
             $table->increments('id');
             $table->string('migration', 191)->unique();
             $table->unsignedInteger('batch');
         });
 
-        if ($legacy) {
-            foreach (array_keys($this->files()) as $name) {
+        foreach (array_keys($this->files()) as $name) {
+            $tables = $this->load($name)->tables();
+            $existing = array_filter($tables, fn (string $table): bool => $schema->hasTable($table));
+
+            if ($tables !== [] && count($existing) === count($tables)) {
                 $this->db->table(self::TABLE)->insert(['migration' => $name, 'batch' => 1]);
             }
         }

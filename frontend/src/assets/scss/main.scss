@@ -64,7 +64,7 @@ h3,
   padding-block: 0.85rem;
   position: relative;
 
-  // Brand stripe echoing the Suplos identity
+  // Brand stripe echoing the Licita identity
   &::after {
     content: '';
     position: absolute;
@@ -103,13 +103,341 @@ h3,
   color: rgba(255, 255, 255, 0.82);
 }
 
-.nav-link-docs {
+.app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
   color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
   font-size: 0.875rem;
+  font-weight: 500;
+
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Account menu
+// ---------------------------------------------------------------------------
+.user-menu {
+  position: relative;
+}
+
+.user-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
 
   &:hover {
-    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $sky;
+    outline-offset: 2px;
+  }
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $sky, $blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-menu-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.user-menu-name {
+  max-width: 11rem;
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu-role {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.user-menu-panel {
+  position: absolute;
+  z-index: 1050;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 16rem;
+  padding-bottom: 0.35rem;
+  background: #fff;
+  border: 1px solid $line;
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(16, 24, 64, 0.16);
+  color: $ink;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: calc(100% - 0.7rem);
+  margin: 0 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: $danger;
+  font-weight: 500;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba($danger, 0.08);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Role badges
+// ---------------------------------------------------------------------------
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.role-admin {
+  background: rgba($navy, 0.1);
+  color: $navy;
+}
+
+.role-editor {
+  background: #e6f1fa;
+  color: #1d5f95;
+}
+
+.role-viewer {
+  background: #eef0f5;
+  color: #545b78;
+}
+
+.cell-email {
+  max-width: 18rem;
+}
+
+// ---------------------------------------------------------------------------
+// Login
+// ---------------------------------------------------------------------------
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(0, 1fr);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+}
+
+.login-aside {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  background: $navy;
+  color: #fff;
+
+  @include media-breakpoint-up(lg) {
+    display: flex;
+    align-items: center;
+  }
+
+  // Brand stripe and soft glow echoing the navbar
+  &::before {
+    content: '';
+    position: absolute;
+    width: 32rem;
+    height: 32rem;
+    right: -12rem;
+    bottom: -12rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($sky, 0.35), transparent 65%);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 4px;
+    background: linear-gradient(90deg, $sky 0 45%, $blue 45% 85%, $navy 85%);
+  }
+}
+
+.login-aside-inner {
+  position: relative;
+  max-width: 30rem;
+  padding: 3rem clamp(2rem, 6vw, 5rem);
+}
+
+.login-aside-title {
+  margin-bottom: 2rem;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.login-aside-list {
+  display: grid;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .bi {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: $sky;
+  }
+}
+
+.login-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.login-brand-compact .brand-name {
+  color: $navy;
+}
+
+.password-field {
+  position: relative;
+
+  .form-control {
+    padding-right: 2.75rem;
+  }
+
+  // Keep the toggle clear of Bootstrap's invalid icon
+  .form-control.is-invalid {
+    padding-right: 4.25rem;
+    background-position: right 2.6rem center;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: $muted;
+  transform: translateY(-50%);
+
+  &:hover {
+    color: $navy;
+    background: #f1f3f9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $blue;
+    outline-offset: 1px;
+  }
+}
+
+.demo-users {
+  padding: 0.75rem;
+  border: 1px dashed #c9d0e0;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.demo-users-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: $navy;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.demo-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid $line;
+  border-radius: 0.6rem;
+  background: $canvas;
+  color: $ink;
+
+  > .bi {
+    color: $blue;
+    font-size: 1.15rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba($blue, 0.5);
+    background: rgba($blue, 0.06);
+  }
+
+  code {
+    color: $navy;
+    font-size: 0.8rem;
   }
 }
 
@@ -515,9 +843,15 @@ h3,
     grid-template-columns: 1fr;
   }
 
-  .brand-divider,
-  .brand-module {
+  .app-navbar .brand-divider,
+  .app-navbar .brand-module,
+  .app-nav-label,
+  .user-menu-text {
     display: none;
+  }
+
+  .user-menu-toggle {
+    padding-right: 0.45rem;
   }
 
   .page-title {

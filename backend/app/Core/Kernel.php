@@ -19,7 +19,16 @@ final class Kernel
         private readonly Router $router,
         private readonly ExceptionHandler $exceptionHandler,
         private readonly string $allowedOrigin = '*',
+        private readonly bool $trustProxy = false,
     ) {
+    }
+
+    /**
+     * Whether the app runs behind a proxy whose X-Forwarded-For can be trusted.
+     */
+    public function trustsProxy(): bool
+    {
+        return $this->trustProxy;
     }
 
     public function handle(Request $request): Response
@@ -46,11 +55,18 @@ final class Kernel
 
     private function withCors(Response $response): Response
     {
-        return $response->withHeaders([
+        $headers = [
             'Access-Control-Allow-Origin' => $this->allowedOrigin,
-            'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type, Accept, X-Requested-With',
-            'Access-Control-Expose-Headers' => 'Content-Disposition',
-        ]);
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Content-Type, Accept, Authorization, X-Requested-With',
+            'Access-Control-Expose-Headers' => 'Content-Disposition, Retry-After',
+        ];
+
+        // The refresh cookie only travels cross-origin to an explicit origin, never to "*".
+        if ($this->allowedOrigin !== '*') {
+            $headers['Access-Control-Allow-Credentials'] = 'true';
+        }
+
+        return $response->withHeaders($headers);
     }
 }

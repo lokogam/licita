@@ -6,6 +6,12 @@ import { exportTenders, listTenders } from '@/api/tenders'
 
 vi.mock('@/api/tenders', () => ({ listTenders: vi.fn(), exportTenders: vi.fn() }))
 vi.mock('@/utils/download', () => ({ saveBlob: vi.fn() }))
+const auth = vi.hoisted(() => ({ abilities: [] }))
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => ({ can: (ability) => auth.abilities.includes(ability) }),
+}))
+
+const ADMIN = ['tenders.view', 'tenders.create', 'tenders.update', 'documents.manage', 'users.manage']
 
 const page = (data, meta = {}) => ({
   data,
@@ -41,6 +47,7 @@ async function mountView(query = {}) {
 describe('TenderListView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    auth.abilities = ADMIN
     listTenders.mockReset()
     exportTenders.mockReset()
   })
@@ -65,6 +72,17 @@ describe('TenderListView', () => {
     expect(wrapper.text()).toContain('01/11/2026')
     expect(wrapper.text()).toContain('Abierta')
     expect(wrapper.get('a[aria-label="Ver detalle de O-0005-26"]').attributes('href')).toBe('/licitaciones/5')
+  })
+
+  it('shows "Nueva licitación" only to users who can create tenders', async () => {
+    listTenders.mockResolvedValue(page([row]))
+    const { wrapper } = await mountView()
+    expect(wrapper.find('a[href="/licitaciones/nueva"]').exists()).toBe(true)
+
+    auth.abilities = ['tenders.view']
+    const { wrapper: readOnly } = await mountView()
+    expect(readOnly.find('a[href="/licitaciones/nueva"]').exists()).toBe(false)
+    expect(readOnly.text()).toContain('Exportar Excel')
   })
 
   it('applies debounced filters and keeps them in the URL', async () => {

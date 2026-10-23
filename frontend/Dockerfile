@@ -18,6 +18,10 @@ CMD ["npm", "run", "dev"]
 # ---------------------------------------------------------------------------
 FROM development AS build
 
+# "true" lists the local demo accounts on the login screen (never for public deployments).
+ARG VITE_SHOW_DEMO_USERS=false
+ENV VITE_SHOW_DEMO_USERS=${VITE_SHOW_DEMO_USERS}
+
 RUN npm run build
 
 # ---------------------------------------------------------------------------
