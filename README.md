@@ -24,6 +24,7 @@ Módulo para **crear, editar (con carga de documentos), listar, filtrar, consult
 7. [Reglas de negocio y validaciones](#reglas-de-negocio-y-validaciones)
 8. [Seguridad](#seguridad)
 9. [Flujo de trabajo con Git](#flujo-de-trabajo-con-git)
+10. [Despliegue en Render](#despliegue-en-render)
 
 ---
 
@@ -277,3 +278,26 @@ Cada regla se valida en el **frontend** (respuesta inmediata) y en el **backend*
 - Ramas: `main` (releases etiquetados), `develop` (integración) y ramas cortas `feature/*`, `fix/*`, `test/*`, `chore/*` y `ci/*`, que se unen con `--no-ff`.
 - Commits atómicos siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/): `feat(tenders): …`, `test(core): …`, `fix(documents): …`.
 - CI en cada push y pull request: lint, análisis estático, pruebas de backend con MySQL, pruebas de frontend, build y E2E sobre el stack de Docker.
+
+---
+
+## Despliegue en Render
+
+El archivo `render.yaml` (Blueprint) crea dos servicios:
+
+| Servicio | Tipo | Detalle |
+|---|---|---|
+| `suplos-licitaciones-api` | Web Service (Docker) | `backend/Dockerfile`, salud en `/api/health` |
+| `suplos-licitaciones` | Static Site | Build de Vite; `/api/*` se reenvía a la API (mismo origen) |
+
+MySQL se aloja fuera de Render (por ejemplo, Aiven MySQL), porque Render no ofrece MySQL administrado.
+
+1. Cargue la estructura y los datos en la base de datos externa:
+   ```bash
+   mysql -h <host> -P <puerto> -u <usuario> -p --ssl-ca=ca.pem <base> < bd/01_schema.sql
+   mysql -h <host> -P <puerto> -u <usuario> -p --ssl-ca=ca.pem <base> < bd/02_activities.sql
+   ```
+2. En Render: **New → Blueprint** y seleccione el repositorio.
+3. Complete las variables `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` y `DB_SSL_CA` (contenido del certificado CA en PEM).
+
+> En el plan gratuito el servicio se suspende tras 15 minutos sin tráfico (la primera visita tarda unos segundos) y el disco es efímero: los documentos subidos no persisten entre despliegues. Para producción se agrega un disco persistente montado en `/var/www/html/storage/app`.
