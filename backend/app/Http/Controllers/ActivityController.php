@@ -34,9 +34,10 @@ final class ActivityController
         parameters: [
             new OA\QueryParameter(
                 name: 'search',
-                description: 'Nombre del producto o prefijo del código (mínimo 2 caracteres)',
-                required: true,
-                schema: new OA\Schema(type: 'string', minLength: 2),
+                description: 'Nombre del producto o prefijo del código (mínimo 2 caracteres). '
+                    . 'Sin búsqueda devuelve las primeras actividades en orden alfabético.',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
             ),
             new OA\QueryParameter(
                 name: 'limit',
