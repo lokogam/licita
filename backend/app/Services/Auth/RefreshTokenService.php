@@ -7,6 +7,7 @@ namespace App\Services\Auth;
 use App\Models\RefreshToken;
 use App\Models\User;
 use App\Support\Clock;
+use Illuminate\Support\Carbon;
 
 /**
  * Issues and rotates refresh tokens.
