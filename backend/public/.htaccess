@@ -1,7 +1,14 @@
 Options -Indexes -MultiViews
 
+# Apache does not hand the Authorization header to PHP by default (needed for Bearer tokens).
+CGIPassAuth On
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Fallback for setups where CGIPassAuth is not available.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # Every request that is not an existing file goes to the front controller.
     RewriteCond %{REQUEST_FILENAME} !-f

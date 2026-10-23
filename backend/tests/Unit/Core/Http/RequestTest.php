@@ -88,6 +88,31 @@ final class RequestTest extends TestCase
         $this->assertSame([], $request->files('missing'));
     }
 
+    public function test_it_exposes_cookies(): void
+    {
+        $request = Request::create('POST', '/api/auth/refresh', cookies: ['refresh_token' => 'abc']);
+
+        $this->assertSame('abc', $request->cookie('refresh_token'));
+        $this->assertNull($request->cookie('missing'));
+    }
+
+    public function test_attributes_are_immutable_and_survive_route_params(): void
+    {
+        $original = Request::create('GET', '/api/tenders/5');
+        $withUser = $original->withAttribute('user', 'ana')->withRouteParams(['id' => '5']);
+
+        $this->assertNull($original->attribute('user'));
+        $this->assertSame('ana', $withUser->attribute('user'));
+        $this->assertSame('5', $withUser->route('id'));
+    }
+
+    public function test_it_reads_the_bearer_token(): void
+    {
+        $this->assertSame('t0k3n', Request::create('GET', '/', headers: ['Authorization' => 'Bearer t0k3n'])->bearerToken());
+        $this->assertNull(Request::create('GET', '/', headers: ['Authorization' => 'Basic xyz'])->bearerToken());
+        $this->assertNull(Request::create('GET', '/')->bearerToken());
+    }
+
     public function test_it_normalizes_nested_php_files_array(): void
     {
         $files = Request::normalizeFiles([

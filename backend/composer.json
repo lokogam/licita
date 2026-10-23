@@ -1,5 +1,5 @@
 {
-    "name": "duvangamboa/suplos-tenders-api",
+    "name": "duvangamboa/licita-api",
     "description": "Tenders module REST API built with plain PHP (MVC) and standalone Eloquent.",
     "type": "project",
     "license": "MIT",
@@ -34,7 +34,9 @@
         "test:feature": "phpunit --testsuite Feature",
         "analyse": "phpstan analyse --memory-limit=512M",
         "lint": "phpcs",
-        "lint:fix": "phpcbf"
+        "lint:fix": "phpcbf",
+        "openapi:build": "php bin/console openapi:build",
+        "test:antivirus": "phpunit --group antivirus"
     },
     "config": {
         "platform": {

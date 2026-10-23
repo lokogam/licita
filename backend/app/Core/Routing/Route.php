@@ -17,11 +17,13 @@ final class Route
 
     /**
      * @param Closure|array{0: class-string, 1: string} $handler
+     * @param list<string> $middleware Aliases with optional parameters, e.g. "auth", "can:tenders.create".
      */
     public function __construct(
         public readonly string $method,
         public readonly string $uri,
         public readonly Closure|array $handler,
+        public readonly array $middleware = [],
     ) {
         $this->isStatic = !str_contains($uri, '{');
         $this->regex = $this->compile($uri);

@@ -37,6 +37,32 @@ jobs:
       - run: composer analyse
       - run: composer test
 
+  antivirus:
+    name: Antivirus integration (ClamAV + EICAR)
+    runs-on: ubuntu-latest
+    services:
+      clamav:
+        image: clamav/clamav:1.4
+        ports: ["3310:3310"]
+        options: >-
+          --health-cmd "clamdcheck.sh"
+          --health-interval 20s --health-timeout 10s --health-retries 30 --health-start-period 120s
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CLAMAV_HOST: 127.0.0.1
+      CLAMAV_PORT: "3310"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: bcmath, pdo_mysql, zip, gd, fileinfo
+          coverage: none
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: composer test:antivirus
+
   frontend:
     name: Frontend (Vitest, build)
     runs-on: ubuntu-latest
@@ -51,6 +77,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
       - run: npm test
       - run: npm run build
 

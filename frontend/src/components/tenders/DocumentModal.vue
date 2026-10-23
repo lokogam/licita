@@ -1,6 +1,7 @@
 <script setup>
 /**
- * Modal to describe a document (title, description, PDF/ZIP file) before adding it to the list.
+ * Modal to describe a document (title, description, PDF/ZIP file).
+ * Without `document` it adds a new one; with `document` it edits a saved one (file optional).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import AppModal from '@/components/base/AppModal.vue'
@@ -10,15 +11,18 @@ import { formatBytes } from '@/utils/formatters'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
+  document: { type: Object, default: null },
+  saving: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['add', 'close'])
+const emit = defineEmits(['add', 'save', 'close'])
 
+const editing = computed(() => props.document !== null)
 const draft = reactive({ title: '', description: '', file: null })
 const touched = reactive({ title: false, description: false, file: false })
 const fileInput = ref(null)
 
-const errors = computed(() => validateDocument(draft))
+const errors = computed(() => validateDocument(draft, { requireFile: !editing.value }))
 const isValid = computed(() => Object.keys(errors.value).length === 0)
 const visibleError = (field) => (touched[field] ? (errors.value[field] ?? '') : '')
 
@@ -26,7 +30,11 @@ watch(
   () => props.show,
   (visible) => {
     if (!visible) return
-    Object.assign(draft, { title: '', description: '', file: null })
+    Object.assign(draft, {
+      title: props.document?.title ?? '',
+      description: props.document?.description ?? '',
+      file: null,
+    })
     Object.assign(touched, { title: false, description: false, file: false })
     if (fileInput.value) fileInput.value.value = ''
   },
@@ -37,15 +45,22 @@ function onFileChange(event) {
   touched.file = true
 }
 
-function add() {
+function submit() {
   Object.assign(touched, { title: true, description: true, file: true })
   if (!isValid.value) return
-  emit('add', { title: draft.title.trim(), description: draft.description.trim(), file: draft.file })
+  const payload = { title: draft.title.trim(), description: draft.description.trim(), file: draft.file }
+  emit(editing.value ? 'save' : 'add', payload)
 }
 </script>
 
 <template>
-  <AppModal :show="show" title="Agregar documento" icon="bi-file-earmark-arrow-up" title-id="document-modal-title" @close="emit('close')">
+  <AppModal
+    :show="show"
+    :title="editing ? 'Editar documento' : 'Agregar documento'"
+    :icon="editing ? 'bi-pencil-square' : 'bi-file-earmark-arrow-up'"
+    title-id="document-modal-title"
+    @close="emit('close')"
+  >
     <div class="d-grid gap-3">
       <FormField
         label="Título"
@@ -90,10 +105,18 @@ function add() {
       <FormField
         label="Archivo"
         input-id="document-file"
-        required
-        :hint="`PDF o ZIP, máximo ${LIMITS.documentMegabytes} MB.`"
+        :required="!editing"
+        :hint="
+          editing
+            ? `Seleccione un archivo solo si desea reemplazar el actual (PDF o ZIP, máx. ${LIMITS.documentMegabytes} MB).`
+            : `PDF o ZIP, máximo ${LIMITS.documentMegabytes} MB.`
+        "
         :error="visibleError('file')"
       >
+        <p v-if="editing" class="small mb-2">
+          <i class="bi bi-file-earmark-check text-success" aria-hidden="true"></i>
+          Archivo actual: {{ document.original_name }}
+        </p>
         <input
           id="document-file"
           ref="fileInput"
@@ -111,7 +134,10 @@ function add() {
 
     <template #footer>
       <button type="button" class="btn btn-outline-secondary" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn btn-primary" :disabled="!isValid" @click="add">Agregar</button>
+      <button type="button" class="btn btn-primary" :disabled="!isValid || saving" @click="submit">
+        <span v-if="saving" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        {{ editing ? 'Guardar' : 'Agregar' }}
+      </button>
     </template>
   </AppModal>
 </template>

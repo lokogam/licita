@@ -48,6 +48,43 @@ export async function updateTender(id, payload, documents) {
 }
 
 /**
+ * Edits a saved document; the file is only sent when it is being replaced.
+ *
+ * @param {number|string} tenderId
+ * @param {number|string} documentId
+ * @param {{title: string, description: string, file: File|null}} document
+ * @returns {Promise<object>} tender with its updated documents
+ */
+export async function updateDocument(tenderId, documentId, document) {
+  const { data } = await http.post(`/tenders/${tenderId}/documents/${documentId}`, buildDocumentFormData(document))
+  return data.data
+}
+
+/**
+ * @param {number|string} tenderId
+ * @param {number|string} documentId
+ * @returns {Promise<object>} tender with the remaining documents
+ */
+export async function deleteDocument(tenderId, documentId) {
+  const { data } = await http.delete(`/tenders/${tenderId}/documents/${documentId}`)
+  return data.data
+}
+
+/**
+ * @param {{title: string, description: string, file: File|null}} document
+ * @returns {FormData}
+ */
+export function buildDocumentFormData(document) {
+  const form = new FormData()
+  form.append('_method', 'PATCH')
+  form.append('title', document.title)
+  form.append('description', document.description)
+  if (document.file) form.append('file', document.file, document.file.name)
+
+  return form
+}
+
+/**
  * Downloads the Excel report for the current filters (no pagination).
  *
  * @param {TenderFilters} filters
@@ -59,6 +96,22 @@ export async function exportTenders(filters) {
   return {
     blob: response.data,
     filename: filenameFromDisposition(response.headers['content-disposition'], 'licitaciones.xlsx'),
+  }
+}
+
+/**
+ * Downloads a saved document. It goes through Axios so the access token is sent.
+ *
+ * @param {number|string} tenderId
+ * @param {{id: number|string, original_name: string}} document
+ * @returns {Promise<{blob: Blob, filename: string}>}
+ */
+export async function downloadDocument(tenderId, document) {
+  const response = await http.get(`/tenders/${tenderId}/documents/${document.id}/download`, { responseType: 'blob' })
+
+  return {
+    blob: response.data,
+    filename: filenameFromDisposition(response.headers['content-disposition'], document.original_name),
   }
 }
 

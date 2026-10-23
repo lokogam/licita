@@ -13,7 +13,11 @@ COPY docker/apache/vhost.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/apache/security.conf /etc/apache2/conf-available/zz-security.conf
 COPY docker/php/app.ini /usr/local/etc/php/conf.d/zz-app.ini
 
-RUN a2enconf zz-security
+COPY docker/entrypoint.sh /usr/local/bin/app-entrypoint
+RUN a2enconf zz-security && chmod +x /usr/local/bin/app-entrypoint
+
+ENTRYPOINT ["app-entrypoint"]
+CMD ["apache2-foreground"]
 
 WORKDIR /var/www/html
 
@@ -34,4 +38,4 @@ RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-
 
 COPY . .
 
-RUN chown -R www-data:www-data storage
+RUN php bin/console openapi:build     && chown -R www-data:www-data storage

@@ -6,6 +6,12 @@ import { exportTenders, listTenders } from '@/api/tenders'
 
 vi.mock('@/api/tenders', () => ({ listTenders: vi.fn(), exportTenders: vi.fn() }))
 vi.mock('@/utils/download', () => ({ saveBlob: vi.fn() }))
+const auth = vi.hoisted(() => ({ abilities: [] }))
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => ({ can: (ability) => auth.abilities.includes(ability) }),
+}))
+
+const ADMIN = ['tenders.view', 'tenders.create', 'tenders.update', 'documents.manage', 'users.manage']
 
 const page = (data, meta = {}) => ({
   data,
@@ -41,6 +47,7 @@ async function mountView(query = {}) {
 describe('TenderListView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    auth.abilities = ADMIN
     listTenders.mockReset()
     exportTenders.mockReset()
   })
@@ -52,11 +59,30 @@ describe('TenderListView', () => {
     const { wrapper } = await mountView()
 
     const headers = wrapper.findAll('th').map((th) => th.text())
-    expect(headers).toEqual(['Consecutivo', 'Objeto', 'Descripción', 'Fecha de inicio', 'Fecha de cierre', 'Estado', 'Acciones'])
+    expect(headers).toEqual([
+      'Consecutivo',
+      'Objeto',
+      'Descripción',
+      'Fecha de inicio',
+      'Fecha de cierre',
+      'Estado',
+      'Acciones',
+    ])
     expect(wrapper.text()).toContain('O-0005-26')
     expect(wrapper.text()).toContain('01/11/2026')
     expect(wrapper.text()).toContain('Abierta')
     expect(wrapper.get('a[aria-label="Ver detalle de O-0005-26"]').attributes('href')).toBe('/licitaciones/5')
+  })
+
+  it('shows "Nueva licitación" only to users who can create tenders', async () => {
+    listTenders.mockResolvedValue(page([row]))
+    const { wrapper } = await mountView()
+    expect(wrapper.find('a[href="/licitaciones/nueva"]').exists()).toBe(true)
+
+    auth.abilities = ['tenders.view']
+    const { wrapper: readOnly } = await mountView()
+    expect(readOnly.find('a[href="/licitaciones/nueva"]').exists()).toBe(false)
+    expect(readOnly.text()).toContain('Exportar Excel')
   })
 
   it('applies debounced filters and keeps them in the URL', async () => {
@@ -69,6 +95,23 @@ describe('TenderListView', () => {
 
     expect(listTenders).toHaveBeenLastCalledWith({ page: 1, per_page: 10, subject: 'portátiles' })
     expect(router.currentRoute.value.query.subject).toBe('portátiles')
+  })
+
+  it('filters by status immediately', async () => {
+    listTenders.mockResolvedValue(page([row]))
+    const { wrapper, router } = await mountView()
+
+    await wrapper.get('#filter-status').setValue('open')
+    await flushPromises()
+
+    expect(listTenders).toHaveBeenLastCalledWith({ page: 1, per_page: 10, status: 'open' })
+    expect(router.currentRoute.value.query.status).toBe('open')
+    expect(wrapper.findAll('#filter-status option').map((o) => o.text())).toEqual([
+      'Todos',
+      'Programada',
+      'Abierta',
+      'Cerrada',
+    ])
   })
 
   it('changes page with the pagination bar', async () => {
@@ -94,7 +137,10 @@ describe('TenderListView', () => {
     exportTenders.mockResolvedValue({ blob: new Blob(['x']), filename: 'licitaciones.xlsx' })
     const { wrapper } = await mountView({ subject: 'compra' })
 
-    await wrapper.findAll('button').find((b) => b.text().includes('Exportar Excel')).trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Exportar Excel'))
+      .trigger('click')
     await flushPromises()
 
     expect(exportTenders).toHaveBeenCalledWith({ subject: 'compra' })

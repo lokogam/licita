@@ -33,3 +33,5 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.swp
+/backend/storage/cache/*
+!/backend/storage/cache/.gitkeep

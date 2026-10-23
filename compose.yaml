@@ -1,10 +1,13 @@
-name: suplos-tenders
+name: licita
 
 services:
   frontend:
     build:
       context: ./frontend
       target: production
+      args:
+        # Local stack only: the login screen lists the public demo accounts.
+        VITE_SHOW_DEMO_USERS: "true"
     ports:
       - "${APP_PORT:-8080}:80"
     depends_on:
@@ -17,12 +20,18 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
+      APP_KEY: ${APP_KEY:-change-me-to-a-long-random-string}
       APP_URL: ${APP_URL:-http://localhost:8080}
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: ${DB_DATABASE:-suplos_tenders}
-      DB_USERNAME: ${DB_USERNAME:-suplos}
+      DB_DATABASE: ${DB_DATABASE:-licita}
+      DB_USERNAME: ${DB_USERNAME:-licita}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+      # Plain HTTP on localhost: the refresh cookie cannot require HTTPS here.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CLAMAV_ENABLED: ${CLAMAV_ENABLED:-false}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
       TZ: America/Bogota
     volumes:
       - documents:/var/www/html/storage/app
@@ -30,12 +39,28 @@ services:
       db:
         condition: service_healthy
 
+  # Antivirus for uploaded documents (needs ~1.5 GB RAM; first start downloads signatures).
+  # Enable with: CLAMAV_ENABLED=true docker compose --profile antivirus up -d
+  clamav:
+    image: clamav/clamav:1.4
+    profiles: ["antivirus"]
+    ports:
+      - "${CLAMAV_FORWARD_PORT:-3310}:3310"
+    volumes:
+      - clamav-db:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+
   db:
     image: mysql:8.4
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-suplos_tenders}
-      MYSQL_USER: ${DB_USERNAME:-suplos}
+      MYSQL_DATABASE: ${DB_DATABASE:-licita}
+      MYSQL_USER: ${DB_USERNAME:-licita}
       MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
       TZ: America/Bogota
@@ -54,3 +79,4 @@ services:
 volumes:
   db-data:
   documents:
+  clamav-db:

@@ -7,9 +7,13 @@ import { useRoute } from 'vue-router'
 import EmptyState from '@/components/base/EmptyState.vue'
 import StatusBadge from '@/components/base/StatusBadge.vue'
 import { getTender } from '@/api/tenders'
+import { useAuth } from '@/composables/useAuth'
+import { useDocumentDownload } from '@/composables/useDocumentDownload'
 import { formatBytes, formatDate, formatDateTime, formatMoney } from '@/utils/formatters'
 
 const route = useRoute()
+const { can } = useAuth()
+const { download, downloadingId } = useDocumentDownload()
 
 const tender = ref(null)
 const loading = ref(true)
@@ -63,10 +67,11 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
             </div>
             <h1 class="page-title mb-1">{{ tender.subject }}</h1>
             <p class="text-body-secondary mb-0">
-              {{ formatMoney(tender.budget, tender.currency) }} · cierra el {{ formatDateTime(tender.closing_date, tender.closing_time) }}
+              {{ formatMoney(tender.budget, tender.currency) }} · cierra el
+              {{ formatDateTime(tender.closing_date, tender.closing_time) }}
             </p>
           </div>
-          <div class="flex-shrink-0">
+          <div v-if="can('tenders.update')" class="flex-shrink-0">
             <RouterLink :to="{ name: 'tenders.edit', params: { id: tender.id } }" class="btn btn-primary">
               <i class="bi bi-pencil-square me-2" aria-hidden="true"></i>Editar
             </RouterLink>
@@ -88,7 +93,10 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
                 :aria-controls="`panel-${tab.key}`"
                 @click="activeTab = tab.key"
               >
-                <i class="bi me-1" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }} <span v-if="tab.key === 'documents'" class="badge rounded-pill text-bg-light border">{{ tender.documents.length }}</span>
+                <i class="bi me-1" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+                <span v-if="tab.key === 'documents'" class="badge rounded-pill text-bg-light border">{{
+                  tender.documents.length
+                }}</span>
               </button>
             </li>
           </ul>
@@ -144,7 +152,8 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
               </li>
             </ol>
             <p class="small text-body-secondary mt-3 mb-0">
-              Creada el {{ formatDateTime(tender.created_at) }} · última actualización {{ formatDateTime(tender.updated_at) }}
+              Creada el {{ formatDateTime(tender.created_at) }} · última actualización
+              {{ formatDateTime(tender.updated_at) }}
             </p>
           </div>
 
@@ -157,8 +166,18 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
                   <p class="small text-body-secondary mb-0">{{ document.description }}</p>
                 </div>
                 <div class="text-end small">
-                  <a :href="document.download_url" class="file-link">
-                    <i class="bi bi-download me-1" aria-hidden="true"></i>{{ document.original_name }}
+                  <a
+                    :href="document.download_url"
+                    class="file-link"
+                    :aria-busy="downloadingId === document.id"
+                    @click.prevent="download(tender.id, document)"
+                  >
+                    <span
+                      v-if="downloadingId === document.id"
+                      class="spinner-border spinner-border-sm me-1"
+                      aria-hidden="true"
+                    ></span>
+                    <i v-else class="bi bi-download me-1" aria-hidden="true"></i>{{ document.original_name }}
                   </a>
                   <span class="d-block text-body-secondary">
                     {{ formatBytes(document.size) }} · {{ formatDate(document.created_at) }}
@@ -170,7 +189,11 @@ const fileIcon = (name) => (name.toLowerCase().endsWith('.zip') ? 'bi-file-earma
               v-else
               icon="bi-folder2-open"
               title="Sin documentos"
-              description="Agregue documentos desde el formulario de edición."
+              :description="
+                can('tenders.update')
+                  ? 'Agregue documentos desde el formulario de edición.'
+                  : 'Esta licitación aún no tiene documentos cargados.'
+              "
             />
           </div>
         </div>

@@ -1,0 +1,139 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Command line tasks.
+ *
+ *   php bin/console migrate             Run pending migrations
+ *   php bin/console migrate:status      List migrations and whether they ran
+ *   php bin/console migrate:rollback    Revert the last batch
+ *   php bin/console migrate:fresh       Drop all tables and migrate again (development only)
+ *   php bin/console schema:dump         Regenerate bd/01_schema.sql from the migrations
+ *   php bin/console openapi:build       Pre-generate the OpenAPI document cache
+ *   php bin/console user:create "Name" email role   Create a user (password from USER_PASSWORD or generated)
+ *   php bin/console users:demo          Create/restore the public demo users (not in production)
+ *   php bin/console users:demo-sql      Regenerate bd/03_demo_users.sql
+ */
+
+declare(strict_types=1);
+
+use App\Database\Migrator;
+use App\Database\Seeders\DemoUsersSeeder;
+use App\Enums\Role;
+use App\Http\Requests\StoreUserRequest;
+use App\Models\User;
+use App\Database\SchemaDumper;
+use App\Services\OpenApiSpec;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Connection;
+
+$basePath = dirname(__DIR__);
+require $basePath . '/bootstrap/app.php';
+
+/** @var Connection $db */
+$db = Capsule::connection();
+$migrationsPath = $basePath . '/database/migrations';
+$command = $argv[1] ?? 'help';
+
+$print = static function (string $line): void {
+    fwrite(STDOUT, $line . PHP_EOL);
+};
+
+switch ($command) {
+    case 'migrate':
+        $ran = (new Migrator($db, $migrationsPath))->migrate();
+        $print($ran === [] ? 'Nothing to migrate.' : 'Migrated: ' . implode(', ', $ran));
+        break;
+
+    case 'migrate:status':
+        foreach ((new Migrator($db, $migrationsPath))->status() as $name => $ran) {
+            $print(($ran ? '[x] ' : '[ ] ') . $name);
+        }
+        break;
+
+    case 'migrate:rollback':
+        $reverted = (new Migrator($db, $migrationsPath))->rollback();
+        $print($reverted === [] ? 'Nothing to roll back.' : 'Rolled back: ' . implode(', ', $reverted));
+        break;
+
+    case 'migrate:fresh':
+        if (($config['env'] ?? 'production') === 'production') {
+            fwrite(STDERR, "migrate:fresh is disabled in production.\n");
+            exit(1);
+        }
+        (new Migrator($db, $migrationsPath))->fresh();
+        $print('Database rebuilt from migrations.');
+        break;
+
+    case 'schema:dump':
+        // Migrate a throwaway database so the real one is never touched.
+        $scratch = $db->getDatabaseName() . '_schema_dump';
+        $db->statement("DROP DATABASE IF EXISTS `{$scratch}`");
+        $db->statement("CREATE DATABASE `{$scratch}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+        $capsule = new Capsule();
+        $capsule->addConnection(array_merge(require $basePath . '/config/database.php', ['database' => $scratch]), 'dump');
+        $dumpDb = $capsule->getConnection('dump');
+
+        (new Migrator($dumpDb, $migrationsPath))->migrate();
+        $sql = (new SchemaDumper($dumpDb, ['activities', 'tenders', 'tender_documents', 'tender_sequences', 'users', 'refresh_tokens', 'login_attempts']))->dump();
+        $db->statement("DROP DATABASE `{$scratch}`");
+
+        $target = $argv[2] ?? $basePath . '/../bd/01_schema.sql';
+        file_put_contents($target, $sql);
+        $print("Schema written to {$target}");
+        break;
+
+    case 'openapi:build':
+        (new OpenApiSpec($config['openapi_cache'], debug: false))->build();
+        $print('OpenAPI document written to ' . $config['openapi_cache']);
+        break;
+
+    case 'user:create':
+        // php bin/console user:create "Full Name" email@example.com admin|editor|viewer
+        // The password is read from USER_PASSWORD, or generated and printed once.
+        [$name, $email, $roleName] = [$argv[2] ?? '', $argv[3] ?? '', $argv[4] ?? ''];
+        $role = Role::tryFrom($roleName);
+        if ($name === '' || $email === '' || $role === null) {
+            fwrite(STDERR, "Usage: user:create \"Name\" email role (" . implode('|', Role::values()) . ")\n");
+            exit(1);
+        }
+        if (User::findByEmail($email) !== null) {
+            fwrite(STDERR, "A user with email {$email} already exists.\n");
+            exit(1);
+        }
+        $password = (string) getenv('USER_PASSWORD');
+        $generated = $password === '';
+        if ($generated) {
+            $password = rtrim(strtr(base64_encode(random_bytes(15)), '+/', '-_'), '=');
+        }
+        if (mb_strlen($password) < StoreUserRequest::MIN_PASSWORD) {
+            fwrite(STDERR, 'The password must have at least ' . StoreUserRequest::MIN_PASSWORD . " characters.\n");
+            exit(1);
+        }
+        $user = User::register($name, $email, $password, $role);
+        $print("Created {$role->label()} {$user->email}" . ($generated ? " with password: {$password}" : '.'));
+        break;
+
+    case 'users:demo':
+        // Local/demo environments only: one public account per role.
+        if (($config['env'] ?? 'production') === 'production' && getenv('ALLOW_DEMO_USERS') !== 'true') {
+            fwrite(STDERR, "users:demo is disabled in production (public passwords).\n");
+            exit(1);
+        }
+        (new DemoUsersSeeder())->run();
+        $print('Demo users ready: ' . implode(', ', array_column(DemoUsersSeeder::USERS, 'email')));
+        break;
+
+    case 'users:demo-sql':
+        $target = $argv[2] ?? $basePath . '/../bd/03_demo_users.sql';
+        file_put_contents($target, (new DemoUsersSeeder())->toSql());
+        $print("Demo users SQL written to {$target}");
+        break;
+
+    default:
+        $print(
+            'Commands: migrate, migrate:status, migrate:rollback, migrate:fresh, schema:dump, openapi:build, '
+            . 'user:create, users:demo, users:demo-sql',
+        );
+}

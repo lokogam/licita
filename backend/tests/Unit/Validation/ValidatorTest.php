@@ -6,6 +6,7 @@ namespace Tests\Unit\Validation;
 
 use App\Core\Http\UploadedFile;
 use App\Validation\Rules\Exists;
+use App\Validation\Rules\Unique;
 use App\Validation\Validator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -42,6 +43,28 @@ final class ValidatorTest extends TestCase
         $validator = new Validator(['subject' => "   \t "], ['subject' => ['required']], ['subject' => 'objeto']);
 
         $this->assertSame(['subject' => ['El campo objeto no puede contener solo espacios.']], $validator->errors());
+    }
+
+    public function test_min_email_and_unique_rules(): void
+    {
+        $validator = new Validator(
+            ['password' => 'corta', 'email' => 'no-es-correo', 'login' => 'ana@example.com'],
+            [
+                'password' => ['min:10'],
+                'email' => ['email'],
+                'login' => ['email', new Unique(fn (mixed $v): bool => $v === 'ana@example.com', 'Ya existe.')],
+            ],
+            ['password' => 'contraseña', 'email' => 'correo'],
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertSame([
+            'password' => ['El campo contraseña debe tener al menos 10 caracteres.'],
+            'email' => ['El campo correo debe ser un correo electrónico válido.'],
+            'login' => ['Ya existe.'],
+        ], $validator->errors());
+
+        $this->assertFalse((new Validator(['p' => 'suficientemente-larga'], ['p' => ['min:10']]))->fails());
     }
 
     public function test_it_reports_only_the_first_failing_rule_per_field(): void

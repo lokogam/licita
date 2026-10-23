@@ -4,11 +4,13 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppModal from '@/components/base/AppModal.vue'
 import EmptyState from '@/components/base/EmptyState.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
+import DocumentModal from '@/components/tenders/DocumentModal.vue'
 import DocumentsSection from '@/components/tenders/DocumentsSection.vue'
 import TenderForm from '@/components/tenders/TenderForm.vue'
-import { getTender, updateTender } from '@/api/tenders'
+import { deleteDocument, getTender, updateDocument, updateTender } from '@/api/tenders'
 import { useToasts } from '@/composables/useToasts'
 
 const route = useRoute()
@@ -39,6 +41,42 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+/* Saved documents are edited and deleted immediately (independent of the tender form). */
+const editingDocument = ref(null)
+const deletingDocument = ref(null)
+const documentBusy = ref(false)
+
+/** Keeps the form untouched: only the documents list is refreshed from the API response. */
+function refreshDocuments(updated) {
+  tender.value = { ...tender.value, documents: updated.documents }
+}
+
+async function saveDocument(changes) {
+  documentBusy.value = true
+  try {
+    refreshDocuments(await updateDocument(tender.value.id, editingDocument.value.id, changes))
+    notify('Documento actualizado correctamente.')
+    editingDocument.value = null
+  } catch (e) {
+    notify(Object.values(e.errors ?? {})[0] ?? e.message, 'danger')
+  } finally {
+    documentBusy.value = false
+  }
+}
+
+async function confirmDeleteDocument() {
+  documentBusy.value = true
+  try {
+    refreshDocuments(await deleteDocument(tender.value.id, deletingDocument.value.id))
+    notify('Documento eliminado.')
+    deletingDocument.value = null
+  } catch (e) {
+    notify(Object.values(e.errors ?? {})[0] ?? e.message, 'danger')
+  } finally {
+    documentBusy.value = false
+  }
+}
 
 async function save(payload) {
   submitting.value = true
@@ -74,7 +112,10 @@ async function save(payload) {
     </div>
 
     <template v-else>
-      <PageHeader :title="`Editar ${tender.consecutive}`" subtitle="Actualice la información y adjunte los documentos." />
+      <PageHeader
+        :title="`Editar ${tender.consecutive}`"
+        subtitle="Actualice la información y adjunte los documentos."
+      />
       <TenderForm
         :initial="tender"
         submit-label="Guardar cambios"
@@ -85,9 +126,44 @@ async function save(payload) {
         @cancel="router.push({ name: 'tenders.show', params: { id: tender.id } })"
       >
         <template #extra>
-          <DocumentsSection v-model="pending" :existing="tender.documents" :error="documentsError" />
+          <DocumentsSection
+            v-model="pending"
+            :tender-id="tender.id"
+            :existing="tender.documents"
+            :error="documentsError"
+            @edit-existing="editingDocument = $event"
+            @delete-existing="deletingDocument = $event"
+          />
         </template>
       </TenderForm>
+
+      <DocumentModal
+        :show="editingDocument !== null"
+        :document="editingDocument"
+        :saving="documentBusy"
+        @save="saveDocument"
+        @close="editingDocument = null"
+      />
+
+      <AppModal
+        :show="deletingDocument !== null"
+        title="Eliminar documento"
+        icon="bi-trash3"
+        title-id="delete-document-title"
+        @close="deletingDocument = null"
+      >
+        <p class="mb-0">
+          ¿Eliminar <strong>{{ deletingDocument?.title }}</strong> ({{ deletingDocument?.original_name }})? Esta acción
+          no se puede deshacer.
+        </p>
+        <template #footer>
+          <button type="button" class="btn btn-outline-secondary" @click="deletingDocument = null">Cancelar</button>
+          <button type="button" class="btn btn-danger" :disabled="documentBusy" @click="confirmDeleteDocument">
+            <span v-if="documentBusy" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            Eliminar
+          </button>
+        </template>
+      </AppModal>
     </template>
   </div>
 </template>

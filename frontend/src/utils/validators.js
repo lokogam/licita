@@ -9,7 +9,18 @@ export const LIMITS = Object.freeze({
   documentTitle: 100,
   documentDescription: 200,
   documentMegabytes: 10,
+  userName: 100,
+  email: 150,
+  passwordMin: 10,
+  passwordMax: 200,
 })
+
+/** Roles a user can have, in the order they are offered in the users form. */
+export const ROLES = Object.freeze([
+  { value: 'admin', label: 'Administrador' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'viewer', label: 'Lector' },
+])
 
 export const CURRENCIES = Object.freeze(['COP', 'USD', 'EUR'])
 
@@ -134,7 +145,8 @@ export function validateTender(form) {
   set('description', textError(form.description, LABELS.description, LIMITS.description))
 
   if (isEmpty(form.currency)) set('currency', 'El campo moneda es obligatorio.')
-  else if (!CURRENCIES.includes(form.currency)) set('currency', `El campo moneda debe ser uno de: ${CURRENCIES.join(', ')}.`)
+  else if (!CURRENCIES.includes(form.currency))
+    set('currency', `El campo moneda debe ser uno de: ${CURRENCIES.join(', ')}.`)
 
   set('budget', budgetError(form.budget))
 
@@ -174,12 +186,13 @@ export function validateTender(form) {
  */
 
 /**
- * Validates a document before it is added to the pending list.
+ * Validates a document before it is added to the pending list or saved.
  *
  * @param {DocumentDraft} document
+ * @param {{requireFile?: boolean}} [options] the file is optional when editing a saved document
  * @returns {Record<string, string>}
  */
-export function validateDocument(document) {
+export function validateDocument(document, { requireFile = true } = {}) {
   const errors = {}
 
   const title = textError(document.title, 'título', LIMITS.documentTitle)
@@ -190,7 +203,7 @@ export function validateDocument(document) {
 
   const file = document.file
   if (!file) {
-    errors.file = 'Debe seleccionar un archivo.'
+    if (requireFile) errors.file = 'Debe seleccionar un archivo.'
   } else {
     const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
     if (!DOCUMENT_EXTENSIONS.includes(extension) || !DOCUMENT_MIME_TYPES.includes(file.type)) {
@@ -198,6 +211,87 @@ export function validateDocument(document) {
     } else if (file.size > LIMITS.documentMegabytes * 1024 * 1024) {
       errors.file = `El archivo no debe superar ${LIMITS.documentMegabytes} MB.`
     }
+  }
+
+  return errors
+}
+
+/**
+ * Same check as the API: something@domain.tld without spaces.
+ *
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function isValidEmail(value) {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+function emailError(value) {
+  if (isEmpty(value)) return 'El campo correo es obligatorio.'
+  if (!isValidEmail(value)) return 'El campo correo debe ser un correo electrónico válido.'
+  if (String(value).trim().length > LIMITS.email) return `El campo correo no debe superar ${LIMITS.email} caracteres.`
+
+  return null
+}
+
+/**
+ * Validates the login form.
+ *
+ * @param {{email: string, password: string}} form
+ * @returns {Record<string, string>}
+ */
+export function validateLogin(form) {
+  const errors = {}
+
+  const email = emailError(form.email)
+  if (email) errors.email = email
+  if (form.password === null || form.password === undefined || form.password === '') {
+    errors.password = 'El campo contraseña es obligatorio.'
+  }
+
+  return errors
+}
+
+/**
+ * @typedef {Object} UserForm
+ * @property {string} name
+ * @property {string} email
+ * @property {string} role
+ * @property {string} password
+ */
+
+/**
+ * Validates the create / edit user form.
+ *
+ * @param {UserForm} form
+ * @param {{requirePassword?: boolean}} [options] when editing, an empty password keeps the current one
+ * @returns {Record<string, string>}
+ */
+export function validateUser(form, { requirePassword = true } = {}) {
+  const errors = {}
+
+  const name = textError(form.name, 'nombre', LIMITS.userName)
+  if (name) errors.name = name
+
+  const email = emailError(form.email)
+  if (email) errors.email = email
+
+  if (isEmpty(form.role)) errors.role = 'El campo rol es obligatorio.'
+  else if (!ROLES.some((role) => role.value === form.role)) {
+    errors.role = `El campo rol debe ser uno de: ${ROLES.map((role) => role.value).join(', ')}.`
+  }
+
+  const password = form.password ?? ''
+  if (password === '') {
+    if (requirePassword) errors.password = 'El campo contraseña es obligatorio.'
+  } else if (password.length < LIMITS.passwordMin) {
+    errors.password = `El campo contraseña debe tener al menos ${LIMITS.passwordMin} caracteres.`
+  } else if (password.length > LIMITS.passwordMax) {
+    errors.password = `El campo contraseña no debe superar ${LIMITS.passwordMax} caracteres.`
   }
 
   return errors

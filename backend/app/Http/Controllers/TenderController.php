@@ -15,6 +15,7 @@ use App\Repositories\TenderFilters;
 use App\Repositories\TenderRepository;
 use App\Services\TenderService;
 use App\Support\Clock;
+use App\Support\CursorCodec;
 use App\Views\Exports\TendersExport;
 use OpenApi\Attributes as OA;
 
@@ -31,6 +32,7 @@ final class TenderController
         private readonly TenderRepository $tenders,
         private readonly TenderService $service,
         private readonly TenderResource $resource,
+        private readonly CursorCodec $cursors,
     ) {
     }
 
@@ -49,7 +51,18 @@ final class TenderController
                 description: 'Descripción contiene',
                 schema: new OA\Schema(type: 'string'),
             ),
+            new OA\QueryParameter(
+                name: 'status',
+                description: 'Estado calculado según el cronograma',
+                schema: new OA\Schema(type: 'string', enum: ['scheduled', 'open', 'closed']),
+            ),
             new OA\QueryParameter(name: 'page', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
+            new OA\QueryParameter(
+                name: 'cursor',
+                description: 'Modo cursor (keyset): envíe vacío para la primera página y luego meta.next_cursor. '
+                    . 'Reemplaza a page y es estable aunque se creen licitaciones entre páginas.',
+                schema: new OA\Schema(type: 'string'),
+            ),
             new OA\QueryParameter(
                 name: 'per_page',
                 schema: new OA\Schema(type: 'integer', maximum: 100, minimum: 1, default: 10),
@@ -58,7 +71,8 @@ final class TenderController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Página de licitaciones, más recientes primero',
+                description: 'Página de licitaciones, más recientes primero '
+                    . '(en modo cursor meta trae per_page y next_cursor)',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(
                         property: 'data',
@@ -72,14 +86,39 @@ final class TenderController
     )]
     public function index(Request $request): JsonResponse
     {
-        $page = max(1, (int) $request->query('page', 1));
         $perPage = min(self::MAX_PER_PAGE, max(1, (int) $request->query('per_page', self::DEFAULT_PER_PAGE)));
+        $filters = TenderFilters::fromRequest($request);
 
-        $result = $this->tenders->paginate(TenderFilters::fromRequest($request), $page, $perPage);
+        $cursor = $request->query('cursor');
+        if ($cursor !== null) {
+            return $this->cursorIndex($filters, is_string($cursor) ? $cursor : '', $perPage);
+        }
+
+        $page = max(1, (int) $request->query('page', 1));
+        $result = $this->tenders->paginate($filters, $page, $perPage);
 
         return new JsonResponse([
             'data' => $result->items->map(fn (Tender $tender): array => $this->resource->summary($tender))->all(),
             'meta' => $result->meta(),
+        ]);
+    }
+
+    /**
+     * Keyset pagination: the cursor carries the id of the last tender already returned.
+     */
+    private function cursorIndex(TenderFilters $filters, string $cursor, int $perPage): JsonResponse
+    {
+        $beforeId = $cursor === '' ? null : (int) ($this->cursors->decode($cursor)['id'] ?? 0);
+        $page = $this->tenders->cursorPage($filters, $beforeId, $perPage);
+        $last = $page['items']->last();
+        $next = $page['hasMore'] && $last !== null ? $this->cursors->encode(['id' => $last->id]) : null;
+
+        return new JsonResponse([
+            'data' => $page['items']->map(fn (Tender $tender): array => $this->resource->summary($tender))->all(),
+            'meta' => [
+                'per_page' => $perPage,
+                'next_cursor' => $next,
+            ],
         ]);
     }
 
@@ -97,6 +136,11 @@ final class TenderController
                 name: 'description',
                 description: 'Descripción contiene',
                 schema: new OA\Schema(type: 'string'),
+            ),
+            new OA\QueryParameter(
+                name: 'status',
+                description: 'Estado calculado según el cronograma',
+                schema: new OA\Schema(type: 'string', enum: ['scheduled', 'open', 'closed']),
             ),
         ],
         responses: [

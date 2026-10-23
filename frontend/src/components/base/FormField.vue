@@ -33,7 +33,9 @@ const counterClass = computed(() => {
         <div v-if="error" :id="`${inputId}-error`" class="invalid-feedback d-block mt-0">{{ error }}</div>
         <div v-else-if="hint" class="form-text mt-0">{{ hint }}</div>
       </div>
-      <span v-if="showCounter" class="form-counter" :class="counterClass" aria-live="polite">{{ count }}/{{ max }}</span>
+      <span v-if="showCounter" class="form-counter" :class="counterClass" aria-live="polite"
+        >{{ count }}/{{ max }}</span
+      >
     </div>
   </div>
 </template>

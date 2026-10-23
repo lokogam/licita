@@ -26,6 +26,12 @@ final class Router
 
     private string $prefix = '';
 
+    /** @var list<string> Middleware of the groups currently being registered. */
+    private array $groupMiddleware = [];
+
+    /** @var array<string, class-string<Middleware>> */
+    private array $middlewareAliases = [];
+
     public function __construct(private readonly Container $container)
     {
     }
@@ -63,19 +69,41 @@ final class Router
     }
 
     /**
-     * Registers the routes defined in the callback under a common prefix.
+     * @param Closure|array{0: class-string, 1: string} $handler
+     */
+    public function patch(string $uri, Closure|array $handler): void
+    {
+        $this->add('PATCH', $uri, $handler);
+    }
+
+    /**
+     * Gives a short name to a middleware class ("auth", "can"...).
+     *
+     * @param class-string<Middleware> $class
+     */
+    public function aliasMiddleware(string $alias, string $class): void
+    {
+        $this->middlewareAliases[$alias] = $class;
+    }
+
+    /**
+     * Registers the routes defined in the callback under a common prefix and middleware.
      *
      * @param callable(Router): void $routes
+     * @param list<string> $middleware
      */
-    public function group(string $prefix, callable $routes): void
+    public function group(string $prefix, callable $routes, array $middleware = []): void
     {
-        $previous = $this->prefix;
-        $this->prefix = $previous . '/' . trim($prefix, '/');
+        $previousPrefix = $this->prefix;
+        $previousMiddleware = $this->groupMiddleware;
+        $this->prefix = $previousPrefix . '/' . trim($prefix, '/');
+        $this->groupMiddleware = [...$previousMiddleware, ...$middleware];
 
         try {
             $routes($this);
         } finally {
-            $this->prefix = $previous;
+            $this->prefix = $previousPrefix;
+            $this->groupMiddleware = $previousMiddleware;
         }
     }
 
@@ -107,7 +135,7 @@ final class Router
                 continue;
             }
 
-            return $this->run($route, $request->withRouteParams($params));
+            return $this->throughMiddleware($route, $request->withRouteParams($params));
         }
 
         if ($allowedMethods !== []) {
@@ -122,8 +150,8 @@ final class Router
      */
     private function add(string $method, string $uri, Closure|array $handler): void
     {
-        $path = '/' . trim($this->prefix . '/' . trim($uri, '/'), '/');
-        $this->routes[] = new Route($method, $path, $handler);
+        $path = '/' . trim((string) preg_replace('#/+#', '/', $this->prefix . '/' . trim($uri, '/')), '/');
+        $this->routes[] = new Route($method, $path, $handler, $this->groupMiddleware);
     }
 
     /**
@@ -137,6 +165,28 @@ final class Router
         $dynamic = array_filter($this->routes, fn (Route $route): bool => !$route->isStatic);
 
         return [...array_values($static), ...array_values($dynamic)];
+    }
+
+    /**
+     * Wraps the handler with the route middleware; the first one listed runs first.
+     */
+    private function throughMiddleware(Route $route, Request $request): Response
+    {
+        $next = fn (Request $request): Response => $this->run($route, $request);
+
+        foreach (array_reverse($route->middleware) as $definition) {
+            [$alias, $arguments] = array_pad(explode(':', $definition, 2), 2, '');
+            $class = $this->middlewareAliases[$alias] ?? throw new LogicException("Unknown middleware [{$alias}].");
+            $parameters = $arguments === '' ? [] : explode(',', $arguments);
+            $next = function (Request $request) use ($class, $next, $parameters): Response {
+                /** @var Middleware $middleware */
+                $middleware = $this->container->make($class);
+
+                return $middleware->handle($request, $next, ...$parameters);
+            };
+        }
+
+        return $next($request);
     }
 
     private function run(Route $route, Request $request): Response

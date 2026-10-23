@@ -51,8 +51,28 @@ describe('DocumentModal', () => {
   it('emits close when cancelled', async () => {
     const wrapper = mount(DocumentModal, { props: { show: true } })
 
-    await wrapper.findAll('button').find((b) => b.text() === 'Cancelar').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() === 'Cancelar')
+      .trigger('click')
 
     expect(wrapper.emitted('close')).toHaveLength(1)
+  })
+
+  it('edits an existing document keeping its file when none is selected', async () => {
+    const existing = { id: 4, title: 'Pliego', description: 'Principal', original_name: 'pliego.pdf' }
+    const wrapper = mount(DocumentModal, { props: { show: false, document: existing } })
+    await wrapper.setProps({ show: true })
+
+    expect(wrapper.text()).toContain('Editar documento')
+    expect(wrapper.get('#document-title').element.value).toBe('Pliego')
+    expect(wrapper.text()).toContain('Archivo actual: pliego.pdf')
+
+    await wrapper.get('#document-description').setValue('Versión final')
+    const save = wrapper.findAll('button').find((b) => b.text() === 'Guardar')
+    expect(save.attributes('disabled')).toBeUndefined()
+    await save.trigger('click')
+
+    expect(wrapper.emitted('save')[0][0]).toEqual({ title: 'Pliego', description: 'Versión final', file: null })
   })
 })

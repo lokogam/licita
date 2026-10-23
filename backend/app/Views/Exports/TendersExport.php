@@ -6,7 +6,6 @@ namespace App\Views\Exports;
 
 use App\Models\Tender;
 use App\Support\Clock;
-use Illuminate\Database\Eloquent\Collection;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -28,9 +27,9 @@ final class TendersExport
     /**
      * Renders the workbook to a temporary file and returns its path.
      *
-     * @param Collection<int, Tender> $tenders
+     * @param iterable<Tender> $tenders
      */
-    public function render(Collection $tenders): string
+    public function render(iterable $tenders): string
     {
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()->setTitle('Licitaciones')->setCreator('Módulo de Licitaciones');
@@ -73,7 +72,7 @@ final class TendersExport
 
         $header = $sheet->getStyle('A1:F1');
         $header->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $header->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('262F6B');
+        $header->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('123C3F');
 
         foreach (self::COLUMN_WIDTHS as $column => $width) {
             $sheet->getColumnDimension($column)->setWidth($width);

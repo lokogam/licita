@@ -9,17 +9,25 @@ import PageHeader from '@/components/base/PageHeader.vue'
 import PaginationBar from '@/components/base/PaginationBar.vue'
 import StatusBadge from '@/components/base/StatusBadge.vue'
 import { exportTenders, listTenders } from '@/api/tenders'
+import { useAuth } from '@/composables/useAuth'
 import { useDebouncedFn } from '@/composables/useDebouncedFn'
 import { useToasts } from '@/composables/useToasts'
 import { saveBlob } from '@/utils/download'
 import { formatDate } from '@/utils/formatters'
 
 const PER_PAGE = 10
-const FILTER_KEYS = ['consecutive', 'subject', 'description']
+const FILTER_KEYS = ['consecutive', 'subject', 'description', 'status']
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todos' },
+  { value: 'scheduled', label: 'Programada' },
+  { value: 'open', label: 'Abierta' },
+  { value: 'closed', label: 'Cerrada' },
+]
 
 const route = useRoute()
 const router = useRouter()
 const { notify } = useToasts()
+const { can } = useAuth()
 
 const filters = reactive(Object.fromEntries(FILTER_KEYS.map((key) => [key, String(route.query[key] ?? '')])))
 const tenders = ref([])
@@ -53,14 +61,16 @@ async function load() {
 
 watch(() => route.query, load, { immediate: true })
 
-const applyFilters = useDebouncedFn(() => {
+function applyFiltersNow() {
   const query = Object.fromEntries(
     Object.entries(filters)
       .map(([key, value]) => [key, value.trim()])
       .filter(([, value]) => value !== ''),
   )
   router.replace({ query })
-}, 300)
+}
+
+const applyFilters = useDebouncedFn(applyFiltersNow, 300)
 
 function clearFilters() {
   FILTER_KEYS.forEach((key) => (filters[key] = ''))
@@ -94,7 +104,7 @@ async function exportExcel() {
           <span v-if="exporting" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
           <i v-else class="bi bi-file-earmark-excel me-2" aria-hidden="true"></i>Exportar Excel
         </button>
-        <RouterLink :to="{ name: 'tenders.create' }" class="btn btn-primary">
+        <RouterLink v-if="can('tenders.create')" :to="{ name: 'tenders.create' }" class="btn btn-primary">
           <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Nueva licitación
         </RouterLink>
       </template>
@@ -103,29 +113,60 @@ async function exportExcel() {
     <section class="card filters-card mb-3" aria-label="Filtros">
       <div class="card-body">
         <div class="row g-2 align-items-end">
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label for="filter-consecutive" class="form-label small">Consecutivo</label>
             <div class="input-icon">
               <i class="bi bi-hash" aria-hidden="true"></i>
-              <input id="filter-consecutive" v-model="filters.consecutive" type="search" class="form-control" placeholder="O-0001-26" @input="applyFilters" />
+              <input
+                id="filter-consecutive"
+                v-model="filters.consecutive"
+                type="search"
+                class="form-control"
+                placeholder="O-0001-26"
+                @input="applyFilters"
+              />
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="filter-subject" class="form-label small">Objeto</label>
             <div class="input-icon">
               <i class="bi bi-search" aria-hidden="true"></i>
-              <input id="filter-subject" v-model="filters.subject" type="search" class="form-control" placeholder="Buscar por objeto" @input="applyFilters" />
+              <input
+                id="filter-subject"
+                v-model="filters.subject"
+                type="search"
+                class="form-control"
+                placeholder="Buscar por objeto"
+                @input="applyFilters"
+              />
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="filter-description" class="form-label small">Descripción</label>
             <div class="input-icon">
               <i class="bi bi-text-left" aria-hidden="true"></i>
-              <input id="filter-description" v-model="filters.description" type="search" class="form-control" placeholder="Buscar en la descripción" @input="applyFilters" />
+              <input
+                id="filter-description"
+                v-model="filters.description"
+                type="search"
+                class="form-control"
+                placeholder="Buscar en la descripción"
+                @input="applyFilters"
+              />
             </div>
           </div>
+          <div class="col-md-3">
+            <label for="filter-status" class="form-label small">Estado</label>
+            <select id="filter-status" v-model="filters.status" class="form-select" @change="applyFiltersNow">
+              <option v-for="option in STATUS_OPTIONS" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
           <div class="col-md-1 text-md-end">
-            <button v-if="hasFilters" type="button" class="btn btn-link btn-sm px-0" @click="clearFilters">Limpiar</button>
+            <button v-if="hasFilters" type="button" class="btn btn-link btn-sm px-0" @click="clearFilters">
+              Limpiar
+            </button>
           </div>
         </div>
       </div>
@@ -158,7 +199,9 @@ async function exportExcel() {
           <tbody v-else-if="tenders.length">
             <tr v-for="tender in tenders" :key="tender.id">
               <td class="consecutive">{{ tender.consecutive }}</td>
-              <td class="cell-subject"><span class="text-truncate d-block" :title="tender.subject">{{ tender.subject }}</span></td>
+              <td class="cell-subject">
+                <span class="text-truncate d-block" :title="tender.subject">{{ tender.subject }}</span>
+              </td>
               <td class="cell-description text-body-secondary">
                 <span class="text-truncate d-block" :title="tender.description">{{ tender.description }}</span>
               </td>
@@ -182,10 +225,20 @@ async function exportExcel() {
           v-if="!loading && tenders.length === 0"
           :icon="hasFilters ? 'bi-funnel' : 'bi-clipboard2-plus'"
           :title="hasFilters ? 'No encontramos licitaciones con esos filtros' : 'Aún no hay licitaciones'"
-          :description="hasFilters ? 'Ajuste o limpie los filtros para ver más resultados.' : 'Cree la primera licitación para empezar.'"
+          :description="
+            hasFilters
+              ? 'Ajuste o limpie los filtros para ver más resultados.'
+              : can('tenders.create')
+                ? 'Cree la primera licitación para empezar.'
+                : 'Cuando se registren licitaciones aparecerán aquí.'
+          "
         >
-          <button v-if="hasFilters" type="button" class="btn btn-outline-secondary btn-sm" @click="clearFilters">Limpiar filtros</button>
-          <RouterLink v-else :to="{ name: 'tenders.create' }" class="btn btn-primary btn-sm">Nueva licitación</RouterLink>
+          <button v-if="hasFilters" type="button" class="btn btn-outline-secondary btn-sm" @click="clearFilters">
+            Limpiar filtros
+          </button>
+          <RouterLink v-else-if="can('tenders.create')" :to="{ name: 'tenders.create' }" class="btn btn-primary btn-sm"
+            >Nueva licitación</RouterLink
+          >
         </EmptyState>
       </div>
 

@@ -12,7 +12,13 @@ const ICONS = { success: 'bi-check-circle-fill', danger: 'bi-exclamation-octagon
 <template>
   <div class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true">
     <TransitionGroup name="toast">
-      <div v-for="toast in toasts" :key="toast.id" class="toast show app-toast" :class="`app-toast-${toast.variant}`" role="status">
+      <div
+        v-for="toast in toasts"
+        :key="toast.id"
+        class="toast show app-toast"
+        :class="`app-toast-${toast.variant}`"
+        role="status"
+      >
         <div class="d-flex align-items-start gap-2 p-3">
           <i class="bi fs-5" :class="ICONS[toast.variant]" aria-hidden="true"></i>
           <div class="flex-grow-1 small">{{ toast.message }}</div>
