@@ -80,6 +80,16 @@ final class Router
     }
 
     /**
+     * Registered routes (used to verify the API documentation covers them all).
+     *
+     * @return list<Route>
+     */
+    public function routes(): array
+    {
+        return $this->routes;
+    }
+
+    /**
      * Finds the route for the request and executes its handler.
      */
     public function dispatch(Request $request): Response
